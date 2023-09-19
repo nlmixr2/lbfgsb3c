@@ -82,7 +82,6 @@ nn <- c(2, 3, 5, 8)
 
 for (n in nn) {
     str <- paste0("Chebyquad in ", n, " parameters");
-    context(str)
     test_that(str, {
         lower <- rep(-10, n)
         upper <- rep(10, n)
@@ -109,5 +108,4 @@ for (n in nn) {
                          round(ans$value, 3))
         }
     })
-
 }
