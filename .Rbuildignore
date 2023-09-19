@@ -9,3 +9,4 @@
 ^pkgdown$
 \.o$
 ^\.github$
+^codecov\.yml$
