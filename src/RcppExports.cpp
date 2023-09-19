@@ -7,6 +7,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // lbfgsb3cpp
 Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector lower, NumericVector upper, List ctrl, Environment rho);
 RcppExport SEXP _lbfgsb3c_lbfgsb3cpp(SEXP parSEXP, SEXP fnSEXP, SEXP grSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP ctrlSEXP, SEXP rhoSEXP) {
