@@ -51,15 +51,15 @@ test_that("100u", {
   expect_equal(1, ans100un$value)
 })
 
-context("roskenbrock with 20", {
+## context("roskenbrock with 20", {
 
-  ## x0 <- rep(0.1, 20)
+## x0 <- rep(0.1, 20)
 
-  ## sol <- lbfgsb3c(x0, genrose.f, genrose.g)
+## sol <- lbfgsb3c(x0, genrose.f, genrose.g)
 
-  ## sol2 <- lbfgsb3c(x0, genrose.f, genrose.g, lower=0, upper=0.5, control=list(factr=1e20))
+## sol2 <- lbfgsb3c(x0, genrose.f, genrose.g, lower=0, upper=0.5, control=list(factr=1e20))
 
-  #optim(x0, genrose.f, genrose.g, method="L-BFGS-B", lower=0, upper=0.5)
+#optim(x0, genrose.f, genrose.g, method="L-BFGS-B", lower=0, upper=0.5)
 
 
-})
+## })
