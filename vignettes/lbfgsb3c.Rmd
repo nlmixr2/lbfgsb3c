@@ -5,13 +5,12 @@ author: "John C Nash
     University of Ottawa,
     nashjc@uottawa.ca"
 date: "October 22, 2019"
-output: 
-    pdf_document
+output: rmarkdown::html_vignette
 bibliography: lbfgsb3c.bib
 vignette: >
   %\VignetteIndexEntry{lbfgsb3c-nocompile}
   %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}

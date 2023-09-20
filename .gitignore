@@ -6,3 +6,4 @@ Meta
 /src/lbfgsb3c.so
 .Rhistory
 docs
+inst/doc
