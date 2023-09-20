@@ -101,6 +101,7 @@
 ##' program as well as adjustments to the tolerances that were not
 ##' present in the original CRAN package.  Also adjustments were made
 ##' to have outputs conform with R's optim routine.
+##'
 ##' @examples
 ##' # Rosenbrock's banana function
 ##' n=3; p=100
@@ -134,47 +135,47 @@
 ##' @export
 lbfgsb3c <- function(par, fn, gr=NULL, lower = -Inf, upper = Inf,
                      control=list(), ..., rho=NULL){
-# control defaults -- idea from spg
-    ctrl <- list(trace= 0L,
-                 maxit=100L,
-                 iprint= -1L,
-                 lmm=5,
-                 factr=1e7,
-                 pgtol=0,
-                 reltol=0,
-                 abstol=0,
-                 info=FALSE);
-    callstak <- sys.calls() # get the call stack
-    lcs <- length(callstak)
-    fstr <- as.character(callstak[lcs])
-    fstr <- strsplit(fstr, "(", fixed=TRUE)[[1]][1]
-    if (ctrl$trace > 0) { cat("Using function ",fstr,"\n") }
-    if ( (fstr == "lbfgsb3") || (fstr == "lbfgsb3f") ) { ctrl$info <- TRUE }
-    # This emits more information from lbfgsb3 Fortran code.
-    namc <- names(control)
-    if (!all(namc %in% names(ctrl)))
-        stop("unknown names in control: ", namc[!(namc %in% names(ctrl))])
-    ctrl[namc] <- control
-    if (missing(rho)){
-        rho <- as.environment(list(...));
+  # control defaults -- idea from spg
+  ctrl <- list(trace= 0L,
+               maxit=1000L,
+               iprint= -1L,
+               lmm=5,
+               factr=1e7,
+               pgtol=0,
+               reltol=1e-6,
+               abstol=0,
+               info=FALSE);
+  callstak <- sys.calls() # get the call stack
+  lcs <- length(callstak)
+  fstr <- as.character(callstak[lcs])
+  fstr <- strsplit(fstr, "(", fixed=TRUE)[[1]][1]
+  if (ctrl$trace > 0) { cat("Using function ",fstr,"\n") }
+  if ( (fstr == "lbfgsb3") || (fstr == "lbfgsb3f") ) { ctrl$info <- TRUE }
+  # This emits more information from lbfgsb3 Fortran code.
+  namc <- names(control)
+  if (!all(namc %in% names(ctrl)))
+    stop("unknown names in control: ", namc[!(namc %in% names(ctrl))])
+  ctrl[namc] <- control
+  if (missing(rho) || is.null(rho)) {
+    rho <- as.environment(list(...));
+  }
+  if (is.null(gr)){
+    gr <- function(x, ...){
+      numDeriv::grad(fn, x, ...);
     }
-    if (is.null(gr)){
-        gr <- function(x, ...){
-            numDeriv::grad(fn, x, ...);
-        }
+  }
+  if (is(fn, "function") & is (gr, "function")){
+    ##        cat("USING fnR, grR\n")
+    fnR <- function(x, rho){
+      do.call(fn, c(list(x), as.list(rho)));
     }
-    if (is(fn, "function") & is (gr, "function")){
-##        cat("USING fnR, grR\n")
-        fnR <- function(x, rho){
-            do.call(fn, c(list(x), as.list(rho)));
-        }
-        grR <- function(x, rho){
-            do.call(gr, c(list(x), as.list(rho)));
-        }
-        return(lbfgsb3cpp(par, fnR, grR, lower, upper, ctrl, rho));
-    } else {
-        return(lbfgsb3cpp(par, fn, gr, lower, upper, ctrl, rho));
+    grR <- function(x, rho){
+      do.call(gr, c(list(x), as.list(rho)));
     }
+    return(lbfgsb3cpp(par, fnR, grR, lower, upper, ctrl, rho));
+  } else {
+    return(lbfgsb3cpp(par, fn, gr, lower, upper, ctrl, rho));
+  }
 } # end of lbfgsb3()
 
 ##'@rdname lbfgsb3c
