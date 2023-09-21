@@ -28,7 +28,7 @@ genrose.g <- function(x, gs = NULL) {
   gg
 }
 
-context("Unconstrained Genrose test with gradient")
+# Unconstrained Genrose test with gradient
 
 nn <- 100
 xx <- rep(3, nn)
@@ -41,7 +41,7 @@ test_that("100u", {
 })
 
 
-context("Unconstrained Genrose test without gradient")
+# Unconstrained Genrose test without gradient
 ans100un <- lbfgsb3c(xx, genrose.f,
                      gr = NULL, gs = 10)
 

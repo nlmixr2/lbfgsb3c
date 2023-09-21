@@ -1,1 +1,4 @@
-destination: docs
+url: https://nlmixr2.github.io/lbfgsb3c/
+template:
+  bootstrap: 5
+

@@ -1,4 +1,3 @@
-context("Bounds")
 test_that("bounds test", {
     bt.f<-function(x){
         sum(x*x)
