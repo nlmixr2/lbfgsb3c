@@ -1,0 +1,10 @@
+pandoc: 2.19.2
+pkgdown: 2.0.7
+pkgdown_sha: ~
+articles:
+  lbfgsb3c: lbfgsb3c.html
+last_built: 2023-09-21T02:22Z
+urls:
+  reference: https://nlmixr2.github.io/lbfgsb3c/reference
+  article: https://nlmixr2.github.io/lbfgsb3c/articles
+
