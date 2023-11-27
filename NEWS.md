@@ -1,10 +1,12 @@
-# lbfgsb3c development changes
+# lbfgsb3c 2020-3.3 changes
 
 * Now allow `rho=NULL` to work the same as if `rho` was not supplied
 
 * Be More careful about `$convergence` by adding a default value of `NA_INTEGER`
 
 * `$convergence` is now an integer instead of a real number
+
+* Fix too many arguments for format as requested by CRAN
 
 * Added a `NEWS.md` file to track changes to the package.
 
