@@ -10,7 +10,7 @@
 
 * Added a `NEWS.md` file to track changes to the package.
 
-# News before lbfgsb3c
+# lbfgsb3c 2020-3.2 prior changes and information
 
 To do
 
