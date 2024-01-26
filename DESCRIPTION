@@ -43,5 +43,6 @@ Author: Matthew L Fidler [aut, cre],
   Jorge Nocedal [aut],
   Jose Luis Morales [aut]
 Packaged: 2020-02-26 20:18:51 UTC; john
-URL: https://nlmixr2.github.io/lbfgsb3c/
+URL: https://nlmixr2.github.io/lbfgsb3c/, https://github.com/nlmixr2/lbfgsb3c
+BugReports: https://github.com/nlmixr2/lbfgsb3c/issues
 Config/testthat/edition: 3
