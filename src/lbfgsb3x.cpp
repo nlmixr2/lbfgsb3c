@@ -92,6 +92,7 @@ Rprintf("\n=====================================================================
     if (itask==3) doExit=1;
     setulb_(&n, &lmm, x, lower, upper, nbd, Fmin, g, &factr, &pgtol,
 	  wa, iwa, &itask, &iprint, &icsave, lsave, isave, dsave);
+
     if (trace > 2) {
       Rprintf("returned from lbfgsb3 \n");
       Rprintf("returned itask is %d or \"%s\"\n",itask,(as<std::string>(taskList[itask-1])).c_str());
@@ -239,7 +240,7 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   bool addInfo = infoN[0];
   IntegerVector lmmN = as<IntegerVector>(ctrl["lmm"]);
   if (lmmN.size() != 1) stop("lmm has to have one element in it.");
-  int lmm = lmmN.size();
+  int lmm = lmmN[0];//lmmN.size();
   int n = par.size();
   IntegerVector maxitN = as<IntegerVector>(ctrl["maxit"]);
   if (maxitN.size() != 1) stop("maxit has to have one element in it.");
@@ -285,7 +286,6 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   double fmin=std::numeric_limits<double>::max();
   int fail = 0, fncount=0, grcount=0;
   grho=rho;
-  //void *ex = (void*)rho; //Should work but use global instead.
   void *ex =NULL;
   char msg[120];
   lbfgsb3C_(n, lmm, x, low, up, nbd, &fmin, gfn, ggr,

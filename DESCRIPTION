@@ -22,7 +22,11 @@ Description: Interfacing to Nocedal et al. L-BFGS-B.3.0
         as allowing the adjustment of more tolerances.
 License: GPL-2
 Depends: R (>= 3.6)
-Imports: Rcpp (>= 0.12.3), numDeriv, methods
+Imports: 
+    Rcpp (>= 0.12.3),
+    numDeriv,
+    methods,
+    adagio
 Suggests: 
     knitr,
     microbenchmark,
