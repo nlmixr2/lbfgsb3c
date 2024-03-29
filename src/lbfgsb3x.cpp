@@ -75,7 +75,19 @@ extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
   taskList[27] = "Maximum number of iterations reached";
   while (true){
     if (trace >= 2){
-      Rprintf("\n================================================================================\nBefore call f=%f task number %d, or \"%s\"\n", *Fmin, itask, (as<std::string>(taskList[itask-1])).c_str());
+      Rprintf("itask: %d\n", itask);
+      // if (trace >= 2) {
+      //   Rprintf("computing f and g at prm=\n");
+      //   NumericVector xv(n);
+      //   std::copy(&x[0],&x[0]+n,&xv[0]);
+      //   print(xv);
+      // }
+      // // Calculate f and g
+      // Fmin[0] = fn(n, x, ex);
+      // fncount[0]++;
+      // gr(n, x, g, ex);
+      // grcount[0]++;
+Rprintf("\n================================================================================\nBefore call task number %d, or \"%s\"\n", itask, (as<std::string>(taskList[itask-1])).c_str());
     }
     if (itask==3) doExit=1;
     setulb_(&n, &lmm, x, lower, upper, nbd, Fmin, g, &factr, &pgtol,
@@ -88,6 +100,7 @@ extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
     case 4:
     case 20:
     case 21:
+      Rprintf("itask: %d\n", itask);
       if (trace >= 2) {
 	Rprintf("computing f and g at prm=\n");
 	NumericVector xv(n);
@@ -100,14 +113,14 @@ extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
       gr(n, x, g, ex);
       grcount[0]++;
       if (trace > 0) {
-	Rprintf("At iteration %d f=%f ", isave[33], *Fmin);
+        Rprintf("At iteration %d f=%f ", isave[33], *Fmin);
 	if (trace > 1) {
-	  double tmp = fabs(g[n-1]);
-	  for (unsigned int j=n-1; j--;){
-	    if (tmp > fabs(g[j])){
-	      tmp = fabs(g[j]);
-	    }
-	  }
+      double tmp = 0;
+      for (int j = 0; j < n; j++) {
+        if (tmp < fabs(g[j])){
+          tmp = fabs(g[j]);
+        }
+      }
 	  Rprintf("max(abs(g))=%f",tmp);
 	}
 	Rprintf("\n");
@@ -194,6 +207,7 @@ void ggr(int n, double *x, double *gr, void *ex){
   Function grad = as<Function>(ev["gr"]);
   par.attr("names") = ev["pn"];
   ret = grad(par, grho);
+  Rcpp::print(ret);
   std::copy(&ret[0], &ret[0]+n, &gr[0]);
 }
 
