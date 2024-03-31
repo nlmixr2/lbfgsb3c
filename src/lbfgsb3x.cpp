@@ -9,9 +9,9 @@
 using namespace Rcpp;
 
 extern "C" void setulb_(int *n, int *m, double *x, double *l, double *u,
-			int *nbd, double *f, double *g, double *factr, double *pgtol,
-			double *wa, int *iwa, int *itask, int *iprint,
-			int *icsave, int *lsave, int *isave, double *dsave);
+                        int *nbd, double *f, double *g, double *factr, double *pgtol,
+                        double *wa, int *iwa, int *itask, int *iprint,
+                        int *icsave, int *lsave, int *isave, double *dsave);
 
 typedef double optimfn(int n, double *par, void *ex);
 
@@ -20,11 +20,11 @@ typedef void optimgr(int n, double *par, double *gr, void *ex);
 List lbfgsb3Cinfo;
 
 extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
-			  double *upper, int *nbd, double *Fmin, optimfn fn,
-			  optimgr gr, int *fail, void *ex, double factr,
-			  double pgtol, int *fncount, int *grcount,
-			  int maxit, char *msg, int trace, int iprint,
-			  double atol, double rtol, double *g) {
+                          double *upper, int *nbd, double *Fmin, optimfn fn,
+                          optimgr gr, int *fail, void *ex, double factr,
+                          double pgtol, int *fncount, int *grcount,
+                          int maxit, char *msg, int trace, int iprint,
+                          double atol, double rtol, double *g) {
   // Optim compatible interface
   int itask= 2;
   // *Fmin=;
@@ -76,22 +76,20 @@ extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
   while (true){
     if (trace >= 2){
       Rprintf("itask: %d\n", itask);
-      // if (trace >= 2) {
-      //   Rprintf("computing f and g at prm=\n");
-      //   NumericVector xv(n);
-      //   std::copy(&x[0],&x[0]+n,&xv[0]);
-      //   print(xv);
-      // }
+      Rprintf("computing f and g at prm=\n");
+      NumericVector xv(n);
+      std::copy(&x[0],&x[0]+n,&xv[0]);
+      print(xv);
       // // Calculate f and g
       // Fmin[0] = fn(n, x, ex);
       // fncount[0]++;
       // gr(n, x, g, ex);
       // grcount[0]++;
-Rprintf("\n================================================================================\nBefore call task number %d, or \"%s\"\n", itask, (as<std::string>(taskList[itask-1])).c_str());
+      Rprintf("\n================================================================================\nBefore call task number %d, or \"%s\"\n", itask, (as<std::string>(taskList[itask-1])).c_str());
     }
     if (itask==3) doExit=1;
     setulb_(&n, &lmm, x, lower, upper, nbd, Fmin, g, &factr, &pgtol,
-	  wa, iwa, &itask, &iprint, &icsave, lsave, isave, dsave);
+            wa, iwa, &itask, &iprint, &icsave, lsave, isave, dsave);
 
     if (trace > 2) {
       Rprintf("returned from lbfgsb3 \n");
@@ -101,12 +99,11 @@ Rprintf("\n=====================================================================
     case 4:
     case 20:
     case 21:
-      Rprintf("itask: %d\n", itask);
       if (trace >= 2) {
-	Rprintf("computing f and g at prm=\n");
-	NumericVector xv(n);
-	std::copy(&x[0],&x[0]+n,&xv[0]);
-	print(xv);
+        Rprintf("computing f and g at prm=\n");
+        NumericVector xv(n);
+        std::copy(&x[0],&x[0]+n,&xv[0]);
+        print(xv);
       }
       // Calculate f and g
       Fmin[0] = fn(n, x, ex);
@@ -115,45 +112,45 @@ Rprintf("\n=====================================================================
       grcount[0]++;
       if (trace > 0) {
         Rprintf("At iteration %d f=%f ", isave[33], *Fmin);
-	if (trace > 1) {
-      double tmp = 0;
-      for (int j = 0; j < n; j++) {
-        if (tmp < fabs(g[j])){
-          tmp = fabs(g[j]);
+        if (trace > 1) {
+          double tmp = 0;
+          for (int j = 0; j < n; j++) {
+            if (tmp < fabs(g[j])){
+              tmp = fabs(g[j]);
+            }
+          }
+          Rprintf("max(abs(g))=%f",tmp);
         }
-      }
-	  Rprintf("max(abs(g))=%f",tmp);
-	}
-	Rprintf("\n");
+        Rprintf("\n");
       }
       break;
     case 1:
       // New x;
-      if (maxit <= fncount[0]){
-      	itask2=28;
-	doExit=1;
-      	itask=3; // Stop -- gives the right results and restores gradients
-	if (trace > 2){
-	  Rprintf("Exit becuase maximum number of function calls %d met.\n", maxit);
-	}
+      if (maxit < fncount[0]){
+        itask2=28;
+        doExit=1;
+        itask=3; // Stop -- gives the right results and restores gradients
+        if (trace > 2){
+          Rprintf("Exit becuase maximum number of function calls %d met.\n", maxit);
+        }
       } else {
-      	bool converge=fabs(lastx[n-1]-x[n-1]) < fabs(x[n-1])*rtol+atol;
-      	if (converge){
-      	  for (i=n-1;i--;){
-      	    converge=fabs(lastx[i]-x[i]) < fabs(x[i])*rtol+atol;
-      	    if  (!converge){
-      	      break;
-      	    }
-      	  }
-      	}
-      	if (converge){
-      	  itask2=27;
-      	  itask=3; // Stop -- gives the right results and restores gradients
-	  if (trace > 2){
-	    Rprintf("CONVERGENCE: Parameters differences below xtol.\n");
-	  }
-	  doExit=1;
-      	}
+        bool converge=fabs(lastx[n-1]-x[n-1]) < fabs(x[n-1])*rtol+atol;
+        if (converge){
+          for (i=n-1;i--;){
+            converge=fabs(lastx[i]-x[i]) < fabs(x[i])*rtol+atol;
+            if  (!converge){
+              break;
+            }
+          }
+        }
+        if (converge){
+          itask2=27;
+          itask=3; // Stop -- gives the right results and restores gradients
+          if (trace > 2){
+            Rprintf("CONVERGENCE: Parameters differences below xtol.\n");
+          }
+          doExit=1;
+        }
       }
       std::copy(&x[0],&x[0]+n,&lastx[0]);
       break;
@@ -174,11 +171,11 @@ Rprintf("\n=====================================================================
   CharacterVector taskR(1);
   taskR[0] = taskList[itask-1];
   lbfgsb3Cinfo = List::create(_["task"] = taskR,
-			      _["itask"]= IntegerVector::create(itask),
-			      _["lsave"]= lsaveR,
-			      _["icsave"]= IntegerVector::create(icsave),
-			      _["dsave"]= dsaveR,
-			      _["isave"] = isaveR);
+                              _["itask"]= IntegerVector::create(itask),
+                              _["lsave"]= lsaveR,
+                              _["icsave"]= IntegerVector::create(icsave),
+                              _["dsave"]= dsaveR,
+                              _["isave"] = isaveR);
   // info <- list(task = task, itask = itask, lsave = lsave,
   //      icsave = icsave, dsave = dsave, isave = isave)
   fail[0]= itask;
@@ -219,7 +216,7 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   ev["gr"] = gr;
   ev["pn"] = par.attr("names");
   Rcpp::NumericVector g(par.size());
-    // CONV in 6, 7, 8; ERROR in 9-19; WARN in 23-26
+  // CONV in 6, 7, 8; ERROR in 9-19; WARN in 23-26
   IntegerVector traceI = as<IntegerVector>(ctrl["trace"]);
   if (traceI.size() != 1) stop("trace has to have one element in it.");
   int trace = traceI[0];
@@ -274,10 +271,10 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   int i;
   for (i = par.size();i--;){
     /*
-	   nbd(i)=0 if x(i) is unbounded,
-		  1 if x(i) has only a lower bound,
-		  2 if x(i) has both lower and upper bounds,
-		  3 if x(i) has only an upper bound.
+      nbd(i)=0 if x(i) is unbounded,
+      1 if x(i) has only a lower bound,
+      2 if x(i) has both lower and upper bounds,
+      3 if x(i) has only an upper bound.
     */
     nbd[i] = 0;
     if (R_FINITE(low[i])) nbd[i] = 1;
@@ -289,8 +286,8 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   void *ex =NULL;
   char msg[120];
   lbfgsb3C_(n, lmm, x, low, up, nbd, &fmin, gfn, ggr,
-	    &fail, ex, factr, pgtol, &fncount,
-	    &grcount, maxit, msg, trace, iprint , atol, rtol, &g[0]);
+            &fail, ex, factr, pgtol, &fncount,
+            &grcount, maxit, msg, trace, iprint , atol, rtol, &g[0]);
   NumericVector parf(par.size());
   std::copy(&x[0],&x[0]+par.size(),parf.begin());
   parf.attr("names")=ev["pn"];
