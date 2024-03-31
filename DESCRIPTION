@@ -2,9 +2,9 @@ Package: lbfgsb3c
 Type: Package
 Title: Limited Memory BFGS Minimizer with Bounds on Parameters with
         optim() 'C' Interface
-Version: 2020-3.3
+Version: 2024-3.3
 Authors@R: c(person(given = c("Matthew", "L"), family = "Fidler", role =
-              c("aut", "cre"), email = "matthew.fidler@gmail.com"),
+              c("aut", "cre"), email = "matthew.fidler@gmail.com", comment=c(ORCID="0000-0001-8538-6691")),
 	      person(given = c("John", "C"), family = "Nash", role =
               c("aut"), email = "nashjc@uottawa.ca"),
               person(given = "Ciyou", family = "Zhu", role = "aut"),
@@ -22,20 +22,24 @@ Description: Interfacing to Nocedal et al. L-BFGS-B.3.0
         as allowing the adjustment of more tolerances.
 License: GPL-2
 Depends: R (>= 3.6)
-Imports: Rcpp (>= 0.12.3), numDeriv, methods
-Suggests: 
+Imports:
+    Rcpp (>= 0.12.3),
+    numDeriv,
+    methods
+Suggests:
     knitr,
     microbenchmark,
     optimx,
     pkgbuild,
     RcppArmadillo,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    adagio
 LinkingTo: Rcpp (>= 0.12.3), RcppArmadillo
 Encoding: UTF-8
 VignetteBuilder: knitr
 NeedsCompilation: yes
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Author: Matthew L Fidler [aut, cre],
   John C Nash [aut],
   Ciyou Zhu [aut],
