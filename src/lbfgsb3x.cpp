@@ -205,7 +205,6 @@ void ggr(int n, double *x, double *gr, void *ex){
   Function grad = as<Function>(ev["gr"]);
   par.attr("names") = ev["pn"];
   ret = grad(par, grho);
-  Rcpp::print(ret);
   std::copy(&ret[0], &ret[0]+n, &gr[0]);
 }
 

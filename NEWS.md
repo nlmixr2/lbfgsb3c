@@ -6,7 +6,7 @@
 
 * Fixed some bugs in printout
 
-* Reverted the code to fix some of the issues in the fortran code
+* Reverted the code to fix some of the issues in the FORTRAN code
 
 # lbfgsb3c 2020-3.3 changes
 
