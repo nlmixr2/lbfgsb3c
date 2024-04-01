@@ -40,12 +40,6 @@ Encoding: UTF-8
 VignetteBuilder: knitr
 NeedsCompilation: yes
 RoxygenNote: 7.3.1
-Author: Matthew L Fidler [aut, cre],
-  John C Nash [aut],
-  Ciyou Zhu [aut],
-  Richard Byrd [aut],
-  Jorge Nocedal [aut],
-  Jose Luis Morales [aut]
 Packaged: 2020-02-26 20:18:51 UTC; john
 URL: https://nlmixr2.github.io/lbfgsb3c/, https://github.com/nlmixr2/lbfgsb3c
 BugReports: https://github.com/nlmixr2/lbfgsb3c/issues
