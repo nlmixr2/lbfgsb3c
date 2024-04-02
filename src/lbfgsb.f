@@ -3042,7 +3042,7 @@ c
 c
 c     ************
 
-      integer i
+c$$$      integer i
       integer nprt
 
 c      if (task(1:5) .eq. 'ERROR') goto 999
