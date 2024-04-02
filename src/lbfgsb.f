@@ -580,7 +580,7 @@ c  ERROR return
          if ((itask .ge. 9) .and. (itask .le. 19)) then
             call prn3lb(n,x,f,itask,iprint,info,itfile,
      +                  iter,nfgv,nintol,nskip,nact,sbgnrm,
-     +                  zero,nseg,word,iback,stp,xstep,k,
+     +                  zero,nseg,word, stp,xstep,k,
      +                  sbtime,lnscht)
             return
          endif
@@ -1030,7 +1030,7 @@ cj    call timer(time2)
       time = time2 - time1
       call prn3lb(n,x,f,itask,iprint,info,itfile,
      +            iter,nfgv,nintol,nskip,nact,sbgnrm,
-     +            time,nseg,word,iback,stp,xstep,k,
+     +            time,nseg,word,stp,xstep,k,
      +            sbtime,lnscht)
  1000 continue
 
@@ -3011,13 +3011,13 @@ c======================= The end of prn2lb =============================
 
       subroutine prn3lb(n, x, f, itask, iprint, info, itfile,
      +                  iter, nfgv, nintol, nskip, nact, sbgnrm,
-     +                  time, nseg, word, iback, stp, xstep, k,
+     +                  time, nseg, word, stp, xstep, k,
      +                  sbtime, lnscht)
 
 c      character*255     task
       character        word(3)
       integer          n, iprint, info, itfile, iter, nfgv, nintol,
-     +                 nskip, nact, nseg, iback, k, itask
+     +                 nskip, nact, nseg, k, itask
       double precision f, sbgnrm, time, stp, xstep, sbtime,
      +                 lnscht, x(n)
 
