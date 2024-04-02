@@ -48,8 +48,8 @@ c JN 20150118 change name setulb to lbfgsb3
 c      subroutine setulb(n, m, x, l, u, nbd, f, g, factr, pgtol, wa, iwa,
       subroutine setulb(n, m, x, l, u, nbd, f, g, factr, pgtol, wa,
      +                iwa, itask, iprint, icsave, lsave, isave, dsave)
-c Berend noted earlier format beyond column 72
-      logical          lsave(4)
+c     Berend noted earlier format beyond column 72
+      integer          lsave(4)
       integer          n, m, iprint, itask, icsave,
      +                 nbd(n), iwa(3*n), isave(44)
       double precision f, factr, pgtol, x(n), l(n), u(n), g(n),
@@ -307,7 +307,7 @@ c mainlb here
      +                  index, iwhere, indx2, itask,
      +                  iprint, icsave, lsave, isave, dsave)
       implicit none
-      logical          lsave(4)
+      integer          lsave(4)
       integer          n, m, iprint, itask, icsave, nbd(n), index(n),
      +                 iwhere(n), indx2(n), isave(23)
       double precision f, factr, pgtol,
@@ -498,7 +498,7 @@ c
 c
 c     ************
 
-      logical          prjctd,cnstnd,boxed,updatd,wrk
+      integer          prjctd,cnstnd,boxed,updatd,wrk
       character*3      word
       integer          i,k,nintol,itfile,iback,nskip,
      +                 head,col,iter,itail,iupdat,
@@ -528,7 +528,7 @@ c           for the limited memory BFGS matrices:
          head   = 1
          theta  = one
          iupdat = 0
-         updatd = .false.
+         updatd = 0
          iback  = 0
          itail  = 0
          iword  = 0
@@ -700,7 +700,7 @@ cw  1001 format (//,'ITERATION ',i5)
       endif
       iword = -1
 c
-      if (.not. cnstnd .and. col .gt. 0) then
+      if (cnstnd .eq. 0 .and. col .gt. 0) then
 c                                            skip the search for GCP.
          call dcopy(n,x,1,z,1)
          wrk = updatd
@@ -736,7 +736,7 @@ cw     +'   refresh the lbfgs memory and restart the iteration.')
          head   = 1
          theta  = one
          iupdat = 0
-         updatd = .false.
+         updatd = 0
 cj       call timer(cpu2)
          cpu2 = 0.0d0
          cachyt = cachyt + cpu2 - cpu1
@@ -776,7 +776,7 @@ c                     [L_a -R_z           theta*S'AA'S ]
 c       where     E = [-I  0]
 c                     [ 0  I]
 
-      if (wrk) call formk(n,nfree,index,nenter,ileave,indx2,iupdat,
+      if (wrk.eq.1) call formk(n,nfree,index,nenter,ileave,indx2,iupdat,
      +                 updatd,wn,snd,m,ws,wy,sy,theta,col,head,info)
       if (info .ne. 0) then
 c          nonpositive definiteness in Cholesky factorization;
@@ -797,7 +797,7 @@ cw         if(iprint .ge. 1) write (6, 1006)
          head   = 1
          theta  = one
          iupdat = 0
-         updatd = .false.
+         updatd = 0
 cj       call timer(cpu2)
          cpu2 = 0.0d0
          sbtime = sbtime + cpu2 - cpu1
@@ -828,7 +828,7 @@ cw         if(iprint .ge. 1) write (6, 1005)
          head   = 1
          theta  = one
          iupdat = 0
-         updatd = .false.
+         updatd = 0
 cj       call timer(cpu2)
          cpu2 = 0.0d0
          sbtime = sbtime + cpu2 - cpu1
@@ -893,7 +893,7 @@ cw            if(iprint .ge. 1) write (6, 1008)
             head   = 1
             theta  = one
             iupdat = 0
-            updatd = .false.
+            updatd = 0
 c            task   = 'RESTART_FROM_LNSRCH'
             itask = 22
 cj       call timer(cpu2)
@@ -961,7 +961,7 @@ c     Compute d=newx-oldx, r=newg-oldg, rr=y'y and dr=y's.
       if (dr .le. epsmch*ddum) then
 c                            skip the L-BFGS update.
          nskip = nskip + 1
-         updatd = .false.
+         updatd = 0
 cw         if (iprint .ge. 1) write (6,1004) dr, ddum
          if (iprint .ge. 1) then
            call dblepr1(' ys =',-1, dr)
@@ -977,7 +977,7 @@ c     Update the L-BFGS matrix.
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-      updatd = .true.
+      updatd = 1
       iupdat = iupdat + 1
 
 c     Update matrices WS and WY and form the middle matrix in B.
@@ -1011,7 +1011,7 @@ cw         if(iprint .ge. 1) write (6, 1007)
          head = 1
          theta = one
          iupdat = 0
-         updatd = .false.
+         updatd = 0
          goto 222
       endif
 
@@ -1106,7 +1106,7 @@ c======================= The end of mainlb =============================
       subroutine active(n, l, u, nbd, x, iwhere, iprint,
      +                  prjctd, cnstnd, boxed)
 
-      logical          prjctd, cnstnd, boxed
+      integer          prjctd, cnstnd, boxed
       integer          n, iprint, nbd(n), iwhere(n)
       double precision x(n), l(n), u(n)
 
@@ -1144,9 +1144,9 @@ c     ************
 c     Initialize nbdd, prjctd, cnstnd and boxed.
 
       nbdd = 0
-      prjctd = .false.
-      cnstnd = .false.
-      boxed = .true.
+      prjctd = 0
+      cnstnd = 0
+      boxed = 1
 
 c     Project the initial x to the easible set if necessary.
 
@@ -1154,13 +1154,13 @@ c     Project the initial x to the easible set if necessary.
          if (nbd(i) .gt. 0) then
             if (nbd(i) .le. 2 .and. x(i) .le. l(i)) then
                if (x(i) .lt. l(i)) then
-                  prjctd = .true.
+                  prjctd = 1
                   x(i) = l(i)
                endif
                nbdd = nbdd + 1
             else if (nbd(i) .ge. 2 .and. x(i) .ge. u(i)) then
                if (x(i) .gt. u(i)) then
-                  prjctd = .true.
+                  prjctd = 1
                   x(i) = u(i)
                endif
                nbdd = nbdd + 1
@@ -1171,14 +1171,14 @@ c     Project the initial x to the easible set if necessary.
 c     Initialize iwhere and assign values to cnstnd and boxed.
 
       do 20 i = 1, n
-         if (nbd(i) .ne. 2) boxed = .false.
+         if (nbd(i) .ne. 2) boxed = 0
          if (nbd(i) .eq. 0) then
 c                                this variable is always free
             iwhere(i) = -1
 
 c           otherwise set x(i)=mid(x(i), u(i), l(i)).
          else
-            cnstnd = .true.
+            cnstnd = 1
             if (nbd(i) .eq. 2 .and. u(i) - l(i) .le. zero) then
 c                   this variable is always fixed
                iwhere(i) = 3
@@ -1189,11 +1189,11 @@ c                   this variable is always fixed
   20  continue
 
       if (iprint .ge. 0) then
-         if (prjctd) then
+         if (prjctd .eq. 1) then
          call intpr('initial X infeasible. Restart with projection.',
      +  -1, 0, 0)
          endif
-         if (.not. cnstnd) then
+         if (cnstnd .eq. 0) then
           call intpr('This problem is unconstrained.', -1, 0,0)
          endif
       endif
@@ -1863,7 +1863,7 @@ c====================== The end of cauchy ==============================
       subroutine cmprlb(n, m, x, g, ws, wy, sy, wt, z, r, wa, index,
      +                 theta, col, head, nfree, cnstnd, info)
 
-      logical          cnstnd
+      integer          cnstnd
       integer          n, m, col, head, nfree, info, index(n)
       double precision theta,
      +                 x(n), g(n), z(n), r(n), wa(4*m),
@@ -1896,7 +1896,7 @@ c     ************
       integer          i,j,k,pointr
       double precision a1,a2
 
-      if (.not. cnstnd .and. col .gt. 0) then
+      if (cnstnd .eq. 0 .and. col .gt. 0) then
          do 26 i = 1, n
             r(i) = -g(i)
   26     continue
@@ -2011,7 +2011,7 @@ c======================= The end of errclb =============================
      +                 info, ind(n), indx2(n)
       double precision theta, wn(2*m, 2*m), wn1(2*m, 2*m),
      +                 ws(n, m), wy(n, m), sy(m, m)
-      logical          updatd
+      integer          updatd
 
 c     ************
 c
@@ -2148,7 +2148,7 @@ c                     [L_a+R_z   S'AA'S   ]
 c        where L_a is the strictly lower triangular part of S'AA'Y
 c              R_z is the upper triangular part of S'ZZ'Y.
 
-      if (updatd) then
+      if (updatd .eq. 1) then
          if (iupdat .gt. m) then
 c                                 shift old part of WN1.
             do 10 jy = 1, m - 1
@@ -2401,7 +2401,7 @@ c======================= The end of formt ==============================
 
       integer n, nfree, nenter, ileave, iprint, iter,
      +        index(n), indx2(n), iwhere(n)
-      logical wrk, updatd, cnstnd
+      integer wrk, updatd, cnstnd
 
 c     ************
 c
@@ -2446,7 +2446,7 @@ c     ************
 
       nenter = 0
       ileave = n + 1
-      if (iter .gt. 0 .and. cnstnd) then
+      if (iter .gt. 0 .and. cnstnd .eq. 1) then
 c                           count the entering and leaving variables.
          do 20 i = 1, nfree
             k = index(i)
@@ -2486,7 +2486,11 @@ cw     +       n+1-ileave,' variables leave; ',nenter,' variables enter'
             call intpr(' no. variables entering =',-1,nenter, 1)
          endif
       endif
-      wrk = (ileave .lt. n+1) .or. (nenter .gt. 0) .or. updatd
+      if ((ileave .lt. n+1) .or. (nenter .gt. 0) .or. updatd .eq. 1)then
+         wrk = 1
+      else
+         wrk = 0
+      endif
 
 c     Find the index set of free and active variables at the GCP.
 
@@ -2631,7 +2635,7 @@ c====================== The end of hpsolb ==============================
      +                  iback, nfgv, info, itask, boxed, cnstnd, icsave,
      +                  isave, dsave)
 
-      logical          boxed, cnstnd
+      integer          boxed, cnstnd
       integer          n, iter, ifun, iback, nfgv, info, itask, icsave,
      +                 nbd(n), isave(2)
       double precision f, fold, gd, gdold, stp, dnorm, dtd, xstep,
@@ -2679,7 +2683,7 @@ c      if (task(1:5) .eq. 'FG_LN') goto 556
 c     Determine the maximum step length.
 
       stpmx = big
-      if (cnstnd) then
+      if (cnstnd .eq. 1) then
          if (iter .eq. 0) then
             stpmx = one
          else
@@ -2706,7 +2710,7 @@ c     Determine the maximum step length.
          endif
       endif
 
-      if (iter .eq. 0 .and. .not. boxed) then
+      if (iter .eq. 0 .and. boxed .eq. 0) then
          stp = min(one/dnorm, stpmx)
       else
          stp = one
