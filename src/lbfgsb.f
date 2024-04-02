@@ -499,7 +499,7 @@ c
 c     ************
 
       integer          prjctd,cnstnd,boxed,updatd,wrk
-      character*3      word
+      character        word(3)
       integer          i,k,nintol,itfile,iback,nskip,
      +                 head,col,iter,itail,iupdat,
      +                 nseg,nfgv,info,ifun,
@@ -2940,7 +2940,7 @@ c======================= The end of prn1lb =============================
       subroutine prn2lb(n, x, f, g, iprint, itfile, iter, nfgv, nact,
      +                  sbgnrm, nseg, word, iword, iback, stp, xstep)
 
-      character*3      word
+      character        word(3)
       integer          n, iprint, itfile, iter, nfgv, nact, nseg,
      +                 iword, iback
       double precision f, sbgnrm, stp, xstep, x(n), g(n)
@@ -3016,7 +3016,7 @@ c======================= The end of prn2lb =============================
      +                  cachyt, sbtime, lnscht)
 
 c      character*255     task
-      character*3      word
+      character        word(3)
       integer          n, iprint, info, itfile, iter, nfgv, nintol,
      +                 nskip, nact, nseg, iback, k, itask
       double precision f, sbgnrm, time, stp, xstep, cachyt, sbtime,
