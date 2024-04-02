@@ -508,7 +508,7 @@ cj itmp for use in R output
       integer          itmp
       double precision theta,fold,ddot,dr,rr,tol,
      +                 xstep,sbgnrm,ddum,dnorm,dtd,epsmch,
-     +                 cpu1,cpu2,cachyt,sbtime,lnscht,time1,time2,
+     +                 cpu1,cpu2, sbtime,lnscht,time1,time2,
      +                 gd,gdold,stp,stpmx,time
       double precision one,zero
       parameter        (one=1.0d0,zero=0.0d0)
@@ -557,7 +557,6 @@ c           for stopping tolerance:
          tol = factr*epsmch
 
 c           for measuring running time:
-         cachyt = 0
          sbtime = 0
          lnscht = 0
 
@@ -582,7 +581,7 @@ c  ERROR return
             call prn3lb(n,x,f,itask,iprint,info,itfile,
      +                  iter,nfgv,nintol,nskip,nact,sbgnrm,
      +                  zero,nseg,word,iback,stp,xstep,k,
-     +                  cachyt,sbtime,lnscht)
+     +                  sbtime,lnscht)
             return
          endif
 
@@ -627,7 +626,7 @@ c          restore local variables.
          dnorm  = dsave(4)
          epsmch = dsave(5)
          cpu1   = dsave(6)
-         cachyt = dsave(7)
+c$$$         cachyt = dsave(7)
          sbtime = dsave(8)
          lnscht = dsave(9)
          time1  = dsave(10)
@@ -739,12 +738,12 @@ cw     +'   refresh the lbfgs memory and restart the iteration.')
          updatd = 0
 cj       call timer(cpu2)
          cpu2 = 0.0d0
-         cachyt = cachyt + cpu2 - cpu1
+c$$$         cachyt = cachyt + cpu2 - cpu1
          goto 222
       endif
 cj      call timer(cpu2)
       cpu2 = 0.0d0
-      cachyt = cachyt + cpu2 - cpu1
+c$$$      cachyt = cachyt + cpu2 - cpu1
       nintol = nintol + nseg
 
 c     Count the entering and leaving variables for iter > 0;
@@ -1032,7 +1031,7 @@ cj    call timer(time2)
       call prn3lb(n,x,f,itask,iprint,info,itfile,
      +            iter,nfgv,nintol,nskip,nact,sbgnrm,
      +            time,nseg,word,iback,stp,xstep,k,
-     +            cachyt,sbtime,lnscht)
+     +            sbtime,lnscht)
  1000 continue
 
 c     Save local variables.
@@ -1067,7 +1066,7 @@ c     Save local variables.
       dsave(4)  = dnorm
       dsave(5)  = epsmch
       dsave(6)  = cpu1
-      dsave(7)  = cachyt
+c$$$      dsave(7)  = cachyt
       dsave(8)  = sbtime
       dsave(9)  = lnscht
       dsave(10) = time1
@@ -1846,7 +1845,7 @@ cw       write (6,2010)
          call intpr('--- exit CAUCHY---',-1, 0,0)
       endif
 cw 1010 format ('Cauchy X =  ',/,(4x,1p,6(1x,d11.4)))
- 2010 format (/,'---------------- exit CAUCHY----------------------',/)
+c$$$ 2010 format (/,'---------------- exit CAUCHY----------------------',/)
 cw 3010 format (/,'---------------- CAUCHY entered-------------------')
 cw 4010 format ('Piece    ',i3,' --f1, f2 at start point ',1p,2(1x,d11.4))
 cw 4011 format (/,'Piece    ',i3,' --f1, f2 at start point ',
@@ -3013,13 +3012,13 @@ c======================= The end of prn2lb =============================
       subroutine prn3lb(n, x, f, itask, iprint, info, itfile,
      +                  iter, nfgv, nintol, nskip, nact, sbgnrm,
      +                  time, nseg, word, iback, stp, xstep, k,
-     +                  cachyt, sbtime, lnscht)
+     +                  sbtime, lnscht)
 
 c      character*255     task
       character        word(3)
       integer          n, iprint, info, itfile, iter, nfgv, nintol,
      +                 nskip, nact, nseg, iback, k, itask
-      double precision f, sbgnrm, time, stp, xstep, cachyt, sbtime,
+      double precision f, sbgnrm, time, stp, xstep, sbtime,
      +                 lnscht, x(n)
 
 c     ************
