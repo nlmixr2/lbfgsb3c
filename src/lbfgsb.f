@@ -1079,10 +1079,10 @@ c     Save local variables.
       dsave(16) = dtd
 
 cw 1001 format (//,'ITERATION ',i5)
- 1002 format
-     +  (/,'At iterate',i5,4x,'f= ',1p,d12.5,4x,'|proj g|= ',1p,d12.5)
- 1003 format (2(1x,i4),5x,'-',5x,'-',3x,'-',5x,'-',5x,'-',8x,'-',3x,
-     +        1p,2(1x,d10.3))
+c$$$ 1002 format
+c$$$     +  (/,'At iterate',i5,4x,'f= ',1p,d12.5,4x,'|proj g|= ',1p,d12.5)
+c$$$ 1003 format (2(1x,i4),5x,'-',5x,'-',3x,'-',5x,'-',5x,'-',8x,'-',3x,
+c$$$     +        1p,2(1x,d10.3))
 cw 1004 format ('  ys=',1p,e10.3,'  -gs=',1p,e10.3,' BFGS update SKIPPED')
 cw 1005 format (/,
 cw     +' Singular triangular system detected;',/,
