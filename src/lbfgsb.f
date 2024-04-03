@@ -915,10 +915,6 @@ c        Compute the infinity norm of the projected (-)gradient.
 
          call projgr(n,l,u,nbd,x,g,sbgnrm)
 
-c        Print iteration information.
-
-         call prn2lb(n, f,g,iprint,iter,nfgv,
-     +               sbgnrm,iword,iback,xstep)
          goto 1000
       endif
  777  continue
@@ -2935,78 +2931,6 @@ cw     +        2x,'stepl',4x,'tstep',5x,'projg',8x,'f')
 
 c======================= The end of prn1lb =============================
 
-      subroutine prn2lb(n, f, g, iprint, iter, nfgv,
-     +                  sbgnrm,  iword, iback, xstep)
-
-c$$$      character        word(4)
-      integer          n, iprint, iter, nfgv,
-     +                 iword, iback
-      double precision f, sbgnrm, xstep, g(n)
-
-c     ************
-c
-c     Subroutine prn2lb
-c
-c     This subroutine prints out new information after a successful
-c       line search.
-c
-c
-c                           *  *  *
-c
-c     NEOS, November 1994. (Latest revision June 1996.)
-c     Optimization Technology Center.
-c     Argonne National Laboratory and Northwestern University.
-c     Written by
-c                        Ciyou Zhu
-c     in collaboration with R.H. Byrd, P. Lu-Chen and J. Nocedal.
-c
-c
-c     ************
-
-      integer i,imod
-
-c           'word' records the status of subspace solutions.
-c$$$      if (iword .eq. 0) then
-c                            the subspace minimization converged.
-c$$$         word = 'con'
-c$$$      else if (iword .eq. 1) then
-c                          the subspace minimization stopped at a bound.
-c$$$         word = 'bnd'
-c$$$      else if (iword .eq. 5) then
-c                             the truncated Newton step has been used.
-c$$$         word = 'TNT'
-c$$$      else
-c$$$         word = '---'
-c$$$      endif
-      if (iprint .ge. 99) then
-cw         write (6,*) 'LINE SEARCH',iback,' times; norm of step = ',xstep
-         call intpr1('LINE SEARCH iback=',-1, iback)
-         call dblepr1('norm of step =',-1, xstep)
-cw         write (6,2001) iter,f,sbgnrm
-         call intpr1('At iterate ',-1, iter)
-         call dblepr1('f =',-1, f)
-         call dblepr1('|proj g| =',-1, sbgnrm)
-         if (iprint .gt. 100) then
-cw            write (6,1004) 'X =',(x(i), i = 1, n)
-cw            write (6,1004) 'G =',(g(i), i = 1, n)
-         endif
-      else if (iprint .gt. 0) then
-         imod = mod(iter,iprint)
-cw         if (imod .eq. 0) write (6,2001) iter,f,sbgnrm
-      endif
-cw      if (iprint .ge. 1) write (itfile,3001)
-cw     +          iter,nfgv,nseg,nact,word,iback,stp,xstep,sbgnrm,f
-
-cw 1004 format (/,a4, 1p, 6(1x,d11.4),/,(4x,1p,6(1x,d11.4)))
-cw 2001 format
-cw     +  (/,'At iterate',i5,4x,'f= ',1p,d12.5,4x,'|proj g|= ',1p,d12.5)
-cw 3001 format(2(1x,i4),2(1x,i5),2x,a3,1x,i4,1p,2(2x,d7.1),1p,2(1x,d10.3))
-
-      return
-
-      end
-
-c======================= The end of prn2lb =============================
 
       subroutine prn3lb(n, x, f, itask, iprint, info,
      +                  nfgv, nintol, nskip, nact, sbgnrm,
