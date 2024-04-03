@@ -917,7 +917,7 @@ c        Compute the infinity norm of the projected (-)gradient.
 
 c        Print iteration information.
 
-         call prn2lb(n,x,f,g,iprint,iter,nfgv,nact,
+         call prn2lb(n, f,g,iprint,iter,nfgv,nact,
      +               sbgnrm,nseg,iword,iback,stp,xstep)
          goto 1000
       endif
@@ -2880,7 +2880,6 @@ c
 c
 c     ************
 
-      integer i
       integer nprt
 
 c  limit output to 1st 5 elements
@@ -2936,13 +2935,13 @@ cw     +        2x,'stepl',4x,'tstep',5x,'projg',8x,'f')
 
 c======================= The end of prn1lb =============================
 
-      subroutine prn2lb(n, x, f, g, iprint, iter, nfgv, nact,
+      subroutine prn2lb(n, f, g, iprint, iter, nfgv, nact,
      +                  sbgnrm, nseg, iword, iback, stp, xstep)
 
 c$$$      character        word(4)
       integer          n, iprint, iter, nfgv, nact, nseg,
      +                 iword, iback
-      double precision f, sbgnrm, stp, xstep, x(n), g(n)
+      double precision f, sbgnrm, stp, xstep, g(n)
 
 c     ************
 c
