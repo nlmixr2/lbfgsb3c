@@ -499,8 +499,8 @@ c
 c     ************
 
       integer          prjctd,cnstnd,boxed,updatd,wrk
-      character        word(3)
-      integer          i,k,nintol,itfile,iback,nskip,
+      character        word(4)
+      integer          i,k,nintol,iback,nskip,
      +                 head,col,iter,itail,iupdat,
      +                 nseg,nfgv,info,ifun,
      +                 iword,nfree,nact,ileave,nenter
@@ -566,7 +566,7 @@ c           'word' records the status of subspace solutions.
 c           'info' records the termination information.
          info = 0
 
-         itfile = 8
+c$$$         itfile = 8
 cw  leave itfile to avoid messing up subroutines
 cw         if (iprint .ge. 1) then
 c                                open a summary file 'iterate.dat'
@@ -578,14 +578,14 @@ c        Check the input arguments for errors.
          call errclb(n,m,factr,l,u,nbd,itask,info,k)
 c  ERROR return
          if ((itask .ge. 9) .and. (itask .le. 19)) then
-            call prn3lb(n,x,f,itask,iprint,info,itfile,
+            call prn3lb(n,x,f,itask,iprint,info,
      +                  nfgv,nintol,nskip,nact,sbgnrm,
      +                  zero,nseg,word, stp,xstep,k,
      +                  sbtime,lnscht)
             return
          endif
 
-         call prn1lb(n,m,l,u,x,iprint,itfile,epsmch)
+         call prn1lb(n,m,l,u,x,iprint,epsmch)
 
 c        Initialize iwhere & project x onto the feasible set.
 
@@ -602,7 +602,7 @@ c          restore local variables.
          updatd = lsave(4)
 
          nintol = isave(1)
-         itfile = isave(3)
+c$$$         itfile = isave(3)
          iback  = isave(4)
          nskip  = isave(5)
          head   = isave(6)
@@ -917,7 +917,7 @@ c        Compute the infinity norm of the projected (-)gradient.
 
 c        Print iteration information.
 
-         call prn2lb(n,x,f,g,iprint,itfile,iter,nfgv,nact,
+         call prn2lb(n,x,f,g,iprint,iter,nfgv,nact,
      +               sbgnrm,nseg,word,iword,iback,stp,xstep)
          goto 1000
       endif
@@ -1028,7 +1028,7 @@ c -------------------- the end of the loop -----------------------------
 cj    call timer(time2)
       time2 = 0.0d0
       time = time2 - time1
-      call prn3lb(n,x,f,itask,iprint,info,itfile,
+      call prn3lb(n,x,f,itask,iprint,info,
      +            nfgv,nintol,nskip,nact,sbgnrm,
      +            time,nseg,word,stp,xstep,k,
      +            sbtime,lnscht)
@@ -1042,7 +1042,7 @@ c     Save local variables.
       lsave(4)  = updatd
 
       isave(1)  = nintol
-      isave(3)  = itfile
+c$$$      isave(3)  = itfile
       isave(4)  = iback
       isave(5)  = nskip
       isave(6)  = head
@@ -2854,9 +2854,9 @@ c                                             and the last column of SS:
 
 c======================= The end of matupd =============================
 
-      subroutine prn1lb(n, m, l, u, x, iprint, itfile, epsmch)
+      subroutine prn1lb(n, m, l, u, x, iprint,  epsmch)
 
-      integer n, m, iprint, itfile
+      integer n, m, iprint
       double precision epsmch, x(n), l(n), u(n)
 
 c     ************
@@ -2936,11 +2936,11 @@ cw     +        2x,'stepl',4x,'tstep',5x,'projg',8x,'f')
 
 c======================= The end of prn1lb =============================
 
-      subroutine prn2lb(n, x, f, g, iprint, itfile, iter, nfgv, nact,
+      subroutine prn2lb(n, x, f, g, iprint, iter, nfgv, nact,
      +                  sbgnrm, nseg, word, iword, iback, stp, xstep)
 
       character        word(3)
-      integer          n, iprint, itfile, iter, nfgv, nact, nseg,
+      integer          n, iprint, iter, nfgv, nact, nseg,
      +                 iword, iback
       double precision f, sbgnrm, stp, xstep, x(n), g(n)
 
@@ -3009,14 +3009,14 @@ cw 3001 format(2(1x,i4),2(1x,i5),2x,a3,1x,i4,1p,2(2x,d7.1),1p,2(1x,d10.3))
 
 c======================= The end of prn2lb =============================
 
-      subroutine prn3lb(n, x, f, itask, iprint, info, itfile,
+      subroutine prn3lb(n, x, f, itask, iprint, info,
      +                  nfgv, nintol, nskip, nact, sbgnrm,
      +                  time, nseg, word, stp, xstep, k,
      +                  sbtime, lnscht)
 
 c      character*255     task
-      character        word(3)
-      integer          n, iprint, info, itfile, nfgv, nintol,
+      character        word(4)
+      integer          n, iprint, info, nfgv, nintol,
      +                 nskip, nact, nseg, k, itask
       double precision f, sbgnrm, time, stp, xstep, sbtime,
      +                 lnscht, x(n)
