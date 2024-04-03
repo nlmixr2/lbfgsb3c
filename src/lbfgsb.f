@@ -585,8 +585,6 @@ c  ERROR return
             return
          endif
 
-         call prn1lb(n,m,l,u,x,iprint,epsmch)
-
 c        Initialize iwhere & project x onto the feasible set.
 
          call active(n,l,u,nbd,x,iwhere,iprint,prjctd,cnstnd,boxed)
@@ -2849,88 +2847,6 @@ c                                             and the last column of SS:
       end
 
 c======================= The end of matupd =============================
-
-      subroutine prn1lb(n, m, l, u, x, iprint,  epsmch)
-
-      integer n, m, iprint
-      double precision epsmch, x(n), l(n), u(n)
-
-c     ************
-c
-c     Subroutine prn1lb
-c
-c     This subroutine prints the input data, initial point, upper and
-c       lower bounds of each variable, machine precision, as well as
-c       the headings of the output.
-c
-c
-c                           *  *  *
-c
-c     NEOS, November 1994. (Latest revision June 1996.)
-c     Optimization Technology Center.
-c     Argonne National Laboratory and Northwestern University.
-c     Written by
-c                        Ciyou Zhu
-c     in collaboration with R.H. Byrd, P. Lu-Chen and J. Nocedal.
-c
-c
-c     ************
-
-      integer nprt
-
-c  limit output to 1st 5 elements
-      nprt = n
-      if (nprt .gt. 5) nprt = 5
-      if (iprint .ge. 0) then
-         if (iprint .ge. 1) then
-cw         write (6,7001) epsmch
-         call dblepr1('RUNNING THE L-BFGS-B CODE with eps=',
-     +     -1, epsmch)
-cw         write (6,*) 'N = ',n,'    M = ',m
-         call intpr1(' N =',-1, n)
-         call intpr1(' M =',-1, m)
-cw            write (itfile,2001) epsmch
-cw            write (itfile,*)'N = ',n,'    M = ',m
-cw            write (itfile,9001)
-            if (iprint .gt. 100) then
-cw               write (6,1004) 'L =',(l(i),i = 1,n)
-cw               write (6,1004) 'X0 =',(x(i),i = 1,n)
-cw               write (6,1004) 'U =',(u(i),i = 1,n)
-               call dblepr('L =',-1, l, n)
-               call dblepr('X0=',-1, x, n)
-               call dblepr('U =',-1, u, n)
-            endif
-         endif
-      endif
-
-cw 1004 format (/,a4, 1p, 6(1x,d11.4),/,(4x,1p,6(1x,d11.4)))
-cw 2001 format ('RUNNING THE L-BFGS-B CODE',/,/,
-cw     + 'it    = iteration number',/,
-cw     + 'nf    = number of function evaluations',/,
-cw     + 'nseg  = number of segments explored during the Cauchy search',/,
-cw     + 'nact  = number of active bounds at the generalized Cauchy point'
-cw     + ,/,
-cw     + 'sub   = manner in which the subspace minimization terminated:'
-cw     + ,/,'        con = converged, bnd = a bound was reached',/,
-cw     + 'itls  = number of iterations performed in the line search',/,
-cw     + 'stepl = step length used',/,
-cw     + 'tstep = norm of the displacement (total step)',/,
-cw     + 'projg = norm of the projected gradient',/,
-cw     + 'f     = function value',/,/,
-cw     + '           * * *',/,/,
-cw     + 'Machine precision =',1p,d10.3)
-cw 7001 format ('RUNNING THE L-BFGS-B CODE',/,/,
-cw     + '           * * *',/,/,
-cw     + 'Machine precision =',1p,d10.3)
-cw 9001 format (/,3x,'it',3x,'nf',2x,'nseg',2x,'nact',2x,'sub',2x,'itls',
-cw     +        2x,'stepl',4x,'tstep',5x,'projg',8x,'f')
-
-      return
-
-      end
-
-c======================= The end of prn1lb =============================
-
 
       subroutine prn3lb(n, x, f, itask, iprint, info,
      +                  nfgv, nintol, nskip, nact, sbgnrm,
