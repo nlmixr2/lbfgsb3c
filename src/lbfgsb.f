@@ -508,7 +508,7 @@ cj itmp for use in R output
       integer          itmp
       double precision theta,fold,ddot,dr,rr,tol,
      +                 xstep,sbgnrm,ddum,dnorm,dtd,epsmch,
-     +                 cpu1,cpu2, sbtime,lnscht,time1,time2,
+     +                 cpu1,cpu2, sbtime,time1,time2,
      +                 gd,gdold,stp,stpmx,time
       double precision one,zero
       parameter        (one=1.0d0,zero=0.0d0)
@@ -558,7 +558,7 @@ c           for stopping tolerance:
 
 c           for measuring running time:
          sbtime = 0
-         lnscht = 0
+c$$$         lnscht = 0
 
 c           'word' records the status of subspace solutions.
 c$$$         word = '---'
@@ -581,7 +581,7 @@ c  ERROR return
             call prn3lb(n,x,f,itask,iprint,info,
      +                  nfgv,nintol,nskip,nact,sbgnrm,
      +                  zero,nseg, stp,xstep,k,
-     +                  sbtime,lnscht)
+     +                  sbtime)
             return
          endif
 
@@ -628,7 +628,7 @@ c$$$         itfile = isave(3)
          cpu1   = dsave(6)
 c$$$         cachyt = dsave(7)
          sbtime = dsave(8)
-         lnscht = dsave(9)
+c$$$         lnscht = dsave(9)
          time1  = dsave(10)
          gd     = dsave(11)
          stpmx  = dsave(12)
@@ -897,7 +897,7 @@ c            task   = 'RESTART_FROM_LNSRCH'
             itask = 22
 cj       call timer(cpu2)
          cpu2 = 0.0d0
-            lnscht = lnscht + cpu2 - cpu1
+c$$$            lnscht = lnscht + cpu2 - cpu1
             goto 222
          endif
 c      else if (task(1:5) .eq. 'FG_LN') then
@@ -908,7 +908,7 @@ c          return to the driver for calculating f and g; reenter at 666.
 c          calculate and print out the quantities related to the new X.
 cj       call timer(cpu2)
          cpu2 = 0.0d0
-         lnscht = lnscht + cpu2 - cpu1
+c$$$         lnscht = lnscht + cpu2 - cpu1
          iter = iter + 1
 
 c        Compute the infinity norm of the projected (-)gradient.
@@ -1031,7 +1031,7 @@ cj    call timer(time2)
       call prn3lb(n,x,f,itask,iprint,info,
      +            nfgv,nintol,nskip,nact,sbgnrm,
      +            time,nseg,stp,xstep,k,
-     +            sbtime,lnscht)
+     +            sbtime)
  1000 continue
 
 c     Save local variables.
@@ -1068,7 +1068,7 @@ c$$$      isave(3)  = itfile
       dsave(6)  = cpu1
 c$$$      dsave(7)  = cachyt
       dsave(8)  = sbtime
-      dsave(9)  = lnscht
+c$$$      dsave(9)  = lnscht
       dsave(10) = time1
       dsave(11) = gd
       dsave(12) = stpmx
@@ -3012,14 +3012,14 @@ c======================= The end of prn2lb =============================
       subroutine prn3lb(n, x, f, itask, iprint, info,
      +                  nfgv, nintol, nskip, nact, sbgnrm,
      +                  time, nseg, stp, xstep, k,
-     +                  sbtime, lnscht)
+     +                  sbtime)
 
 c      character*255     task
 c$$$      character        word(4)
       integer          n, iprint, info, nfgv, nintol,
      +                 nskip, nact, nseg, k, itask
       double precision f, sbgnrm, time, stp, xstep, sbtime,
-     +                 lnscht, x(n)
+     +     x(n)
 
 c     ************
 c
