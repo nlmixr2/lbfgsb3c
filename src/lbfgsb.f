@@ -579,7 +579,7 @@ c        Check the input arguments for errors.
 c  ERROR return
          if ((itask .ge. 9) .and. (itask .le. 19)) then
             call prn3lb(n,x,f,itask,iprint,info,itfile,
-     +                  iter,nfgv,nintol,nskip,nact,sbgnrm,
+     +                  nfgv,nintol,nskip,nact,sbgnrm,
      +                  zero,nseg,word, stp,xstep,k,
      +                  sbtime,lnscht)
             return
@@ -1029,7 +1029,7 @@ cj    call timer(time2)
       time2 = 0.0d0
       time = time2 - time1
       call prn3lb(n,x,f,itask,iprint,info,itfile,
-     +            iter,nfgv,nintol,nskip,nact,sbgnrm,
+     +            nfgv,nintol,nskip,nact,sbgnrm,
      +            time,nseg,word,stp,xstep,k,
      +            sbtime,lnscht)
  1000 continue
@@ -3010,13 +3010,13 @@ cw 3001 format(2(1x,i4),2(1x,i5),2x,a3,1x,i4,1p,2(2x,d7.1),1p,2(1x,d10.3))
 c======================= The end of prn2lb =============================
 
       subroutine prn3lb(n, x, f, itask, iprint, info, itfile,
-     +                  iter, nfgv, nintol, nskip, nact, sbgnrm,
+     +                  nfgv, nintol, nskip, nact, sbgnrm,
      +                  time, nseg, word, stp, xstep, k,
      +                  sbtime, lnscht)
 
 c      character*255     task
       character        word(3)
-      integer          n, iprint, info, itfile, iter, nfgv, nintol,
+      integer          n, iprint, info, itfile, nfgv, nintol,
      +                 nskip, nact, nseg, k, itask
       double precision f, sbgnrm, time, stp, xstep, sbtime,
      +                 lnscht, x(n)
