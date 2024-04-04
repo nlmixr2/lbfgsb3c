@@ -1,6 +1,1 @@
-This release reverts to an older version of lbfgsb3 that fixes adagio tests
-
-In addition it:
-
-- Fixes `lmm` option in R call
-- Fixes printout
+This is a bug fix that removes irrelevant fortran code and fixes lto issues (as requested by CRAN)

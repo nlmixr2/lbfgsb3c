@@ -48,8 +48,8 @@ c JN 20150118 change name setulb to lbfgsb3
 c      subroutine setulb(n, m, x, l, u, nbd, f, g, factr, pgtol, wa, iwa,
       subroutine setulb(n, m, x, l, u, nbd, f, g, factr, pgtol, wa,
      +                iwa, itask, iprint, icsave, lsave, isave, dsave)
-c Berend noted earlier format beyond column 72
-      logical          lsave(4)
+c     Berend noted earlier format beyond column 72
+      integer          lsave(4)
       integer          n, m, iprint, itask, icsave,
      +                 nbd(n), iwa(3*n), isave(44)
       double precision f, factr, pgtol, x(n), l(n), u(n), g(n),
@@ -307,7 +307,7 @@ c mainlb here
      +                  index, iwhere, indx2, itask,
      +                  iprint, icsave, lsave, isave, dsave)
       implicit none
-      logical          lsave(4)
+      integer          lsave(4)
       integer          n, m, iprint, itask, icsave, nbd(n), index(n),
      +                 iwhere(n), indx2(n), isave(23)
       double precision f, factr, pgtol,
@@ -498,9 +498,9 @@ c
 c
 c     ************
 
-      logical          prjctd,cnstnd,boxed,updatd,wrk
-      character*3      word
-      integer          i,k,nintol,itfile,iback,nskip,
+      integer          prjctd,cnstnd,boxed,updatd,wrk
+c$$$      character        word(4)
+      integer          i,k,nintol,iback,nskip,
      +                 head,col,iter,itail,iupdat,
      +                 nseg,nfgv,info,ifun,
      +                 iword,nfree,nact,ileave,nenter
@@ -508,7 +508,7 @@ cj itmp for use in R output
       integer          itmp
       double precision theta,fold,ddot,dr,rr,tol,
      +                 xstep,sbgnrm,ddum,dnorm,dtd,epsmch,
-     +                 cpu1,cpu2,cachyt,sbtime,lnscht,time1,time2,
+     +                 cpu1,cpu2, sbtime,time1,time2,
      +                 gd,gdold,stp,stpmx,time
       double precision one,zero
       parameter        (one=1.0d0,zero=0.0d0)
@@ -528,7 +528,7 @@ c           for the limited memory BFGS matrices:
          head   = 1
          theta  = one
          iupdat = 0
-         updatd = .false.
+         updatd = 0
          iback  = 0
          itail  = 0
          iword  = 0
@@ -557,17 +557,16 @@ c           for stopping tolerance:
          tol = factr*epsmch
 
 c           for measuring running time:
-         cachyt = 0
          sbtime = 0
-         lnscht = 0
+c$$$         lnscht = 0
 
 c           'word' records the status of subspace solutions.
-         word = '---'
+c$$$         word = '---'
 
 c           'info' records the termination information.
          info = 0
 
-         itfile = 8
+c$$$         itfile = 8
 cw  leave itfile to avoid messing up subroutines
 cw         if (iprint .ge. 1) then
 c                                open a summary file 'iterate.dat'
@@ -579,14 +578,8 @@ c        Check the input arguments for errors.
          call errclb(n,m,factr,l,u,nbd,itask,info,k)
 c  ERROR return
          if ((itask .ge. 9) .and. (itask .le. 19)) then
-            call prn3lb(n,x,f,itask,iprint,info,itfile,
-     +                  iter,nfgv,nintol,nskip,nact,sbgnrm,
-     +                  zero,nseg,word,iback,stp,xstep,k,
-     +                  cachyt,sbtime,lnscht)
             return
          endif
-
-         call prn1lb(n,m,l,u,x,iprint,itfile,epsmch)
 
 c        Initialize iwhere & project x onto the feasible set.
 
@@ -603,7 +596,7 @@ c          restore local variables.
          updatd = lsave(4)
 
          nintol = isave(1)
-         itfile = isave(3)
+c$$$         itfile = isave(3)
          iback  = isave(4)
          nskip  = isave(5)
          head   = isave(6)
@@ -627,9 +620,9 @@ c          restore local variables.
          dnorm  = dsave(4)
          epsmch = dsave(5)
          cpu1   = dsave(6)
-         cachyt = dsave(7)
+c$$$         cachyt = dsave(7)
          sbtime = dsave(8)
-         lnscht = dsave(9)
+c$$$         lnscht = dsave(9)
          time1  = dsave(10)
          gd     = dsave(11)
          stpmx  = dsave(12)
@@ -700,7 +693,7 @@ cw  1001 format (//,'ITERATION ',i5)
       endif
       iword = -1
 c
-      if (.not. cnstnd .and. col .gt. 0) then
+      if (cnstnd .eq. 0 .and. col .gt. 0) then
 c                                            skip the search for GCP.
          call dcopy(n,x,1,z,1)
          wrk = updatd
@@ -736,15 +729,15 @@ cw     +'   refresh the lbfgs memory and restart the iteration.')
          head   = 1
          theta  = one
          iupdat = 0
-         updatd = .false.
+         updatd = 0
 cj       call timer(cpu2)
          cpu2 = 0.0d0
-         cachyt = cachyt + cpu2 - cpu1
+c$$$         cachyt = cachyt + cpu2 - cpu1
          goto 222
       endif
 cj      call timer(cpu2)
       cpu2 = 0.0d0
-      cachyt = cachyt + cpu2 - cpu1
+c$$$      cachyt = cachyt + cpu2 - cpu1
       nintol = nintol + nseg
 
 c     Count the entering and leaving variables for iter > 0;
@@ -776,7 +769,7 @@ c                     [L_a -R_z           theta*S'AA'S ]
 c       where     E = [-I  0]
 c                     [ 0  I]
 
-      if (wrk) call formk(n,nfree,index,nenter,ileave,indx2,iupdat,
+      if (wrk.eq.1) call formk(n,nfree,index,nenter,ileave,indx2,iupdat,
      +                 updatd,wn,snd,m,ws,wy,sy,theta,col,head,info)
       if (info .ne. 0) then
 c          nonpositive definiteness in Cholesky factorization;
@@ -797,7 +790,7 @@ cw         if(iprint .ge. 1) write (6, 1006)
          head   = 1
          theta  = one
          iupdat = 0
-         updatd = .false.
+         updatd = 0
 cj       call timer(cpu2)
          cpu2 = 0.0d0
          sbtime = sbtime + cpu2 - cpu1
@@ -828,7 +821,7 @@ cw         if(iprint .ge. 1) write (6, 1005)
          head   = 1
          theta  = one
          iupdat = 0
-         updatd = .false.
+         updatd = 0
 cj       call timer(cpu2)
          cpu2 = 0.0d0
          sbtime = sbtime + cpu2 - cpu1
@@ -893,12 +886,12 @@ cw            if(iprint .ge. 1) write (6, 1008)
             head   = 1
             theta  = one
             iupdat = 0
-            updatd = .false.
+            updatd = 0
 c            task   = 'RESTART_FROM_LNSRCH'
             itask = 22
 cj       call timer(cpu2)
          cpu2 = 0.0d0
-            lnscht = lnscht + cpu2 - cpu1
+c$$$            lnscht = lnscht + cpu2 - cpu1
             goto 222
          endif
 c      else if (task(1:5) .eq. 'FG_LN') then
@@ -909,17 +902,13 @@ c          return to the driver for calculating f and g; reenter at 666.
 c          calculate and print out the quantities related to the new X.
 cj       call timer(cpu2)
          cpu2 = 0.0d0
-         lnscht = lnscht + cpu2 - cpu1
+c$$$         lnscht = lnscht + cpu2 - cpu1
          iter = iter + 1
 
 c        Compute the infinity norm of the projected (-)gradient.
 
          call projgr(n,l,u,nbd,x,g,sbgnrm)
 
-c        Print iteration information.
-
-         call prn2lb(n,x,f,g,iprint,itfile,iter,nfgv,nact,
-     +               sbgnrm,nseg,word,iword,iback,stp,xstep)
          goto 1000
       endif
  777  continue
@@ -961,7 +950,7 @@ c     Compute d=newx-oldx, r=newg-oldg, rr=y'y and dr=y's.
       if (dr .le. epsmch*ddum) then
 c                            skip the L-BFGS update.
          nskip = nskip + 1
-         updatd = .false.
+         updatd = 0
 cw         if (iprint .ge. 1) write (6,1004) dr, ddum
          if (iprint .ge. 1) then
            call dblepr1(' ys =',-1, dr)
@@ -977,7 +966,7 @@ c     Update the L-BFGS matrix.
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-      updatd = .true.
+      updatd = 1
       iupdat = iupdat + 1
 
 c     Update matrices WS and WY and form the middle matrix in B.
@@ -1011,7 +1000,7 @@ cw         if(iprint .ge. 1) write (6, 1007)
          head = 1
          theta = one
          iupdat = 0
-         updatd = .false.
+         updatd = 0
          goto 222
       endif
 
@@ -1029,10 +1018,6 @@ c -------------------- the end of the loop -----------------------------
 cj    call timer(time2)
       time2 = 0.0d0
       time = time2 - time1
-      call prn3lb(n,x,f,itask,iprint,info,itfile,
-     +            iter,nfgv,nintol,nskip,nact,sbgnrm,
-     +            time,nseg,word,iback,stp,xstep,k,
-     +            cachyt,sbtime,lnscht)
  1000 continue
 
 c     Save local variables.
@@ -1043,7 +1028,7 @@ c     Save local variables.
       lsave(4)  = updatd
 
       isave(1)  = nintol
-      isave(3)  = itfile
+c$$$      isave(3)  = itfile
       isave(4)  = iback
       isave(5)  = nskip
       isave(6)  = head
@@ -1067,9 +1052,9 @@ c     Save local variables.
       dsave(4)  = dnorm
       dsave(5)  = epsmch
       dsave(6)  = cpu1
-      dsave(7)  = cachyt
+c$$$      dsave(7)  = cachyt
       dsave(8)  = sbtime
-      dsave(9)  = lnscht
+c$$$      dsave(9)  = lnscht
       dsave(10) = time1
       dsave(11) = gd
       dsave(12) = stpmx
@@ -1079,10 +1064,10 @@ c     Save local variables.
       dsave(16) = dtd
 
 cw 1001 format (//,'ITERATION ',i5)
- 1002 format
-     +  (/,'At iterate',i5,4x,'f= ',1p,d12.5,4x,'|proj g|= ',1p,d12.5)
- 1003 format (2(1x,i4),5x,'-',5x,'-',3x,'-',5x,'-',5x,'-',8x,'-',3x,
-     +        1p,2(1x,d10.3))
+c$$$ 1002 format
+c$$$     +  (/,'At iterate',i5,4x,'f= ',1p,d12.5,4x,'|proj g|= ',1p,d12.5)
+c$$$ 1003 format (2(1x,i4),5x,'-',5x,'-',3x,'-',5x,'-',5x,'-',8x,'-',3x,
+c$$$     +        1p,2(1x,d10.3))
 cw 1004 format ('  ys=',1p,e10.3,'  -gs=',1p,e10.3,' BFGS update SKIPPED')
 cw 1005 format (/,
 cw     +' Singular triangular system detected;',/,
@@ -1106,7 +1091,7 @@ c======================= The end of mainlb =============================
       subroutine active(n, l, u, nbd, x, iwhere, iprint,
      +                  prjctd, cnstnd, boxed)
 
-      logical          prjctd, cnstnd, boxed
+      integer          prjctd, cnstnd, boxed
       integer          n, iprint, nbd(n), iwhere(n)
       double precision x(n), l(n), u(n)
 
@@ -1144,9 +1129,9 @@ c     ************
 c     Initialize nbdd, prjctd, cnstnd and boxed.
 
       nbdd = 0
-      prjctd = .false.
-      cnstnd = .false.
-      boxed = .true.
+      prjctd = 0
+      cnstnd = 0
+      boxed = 1
 
 c     Project the initial x to the easible set if necessary.
 
@@ -1154,13 +1139,13 @@ c     Project the initial x to the easible set if necessary.
          if (nbd(i) .gt. 0) then
             if (nbd(i) .le. 2 .and. x(i) .le. l(i)) then
                if (x(i) .lt. l(i)) then
-                  prjctd = .true.
+                  prjctd = 1
                   x(i) = l(i)
                endif
                nbdd = nbdd + 1
             else if (nbd(i) .ge. 2 .and. x(i) .ge. u(i)) then
                if (x(i) .gt. u(i)) then
-                  prjctd = .true.
+                  prjctd = 1
                   x(i) = u(i)
                endif
                nbdd = nbdd + 1
@@ -1171,14 +1156,14 @@ c     Project the initial x to the easible set if necessary.
 c     Initialize iwhere and assign values to cnstnd and boxed.
 
       do 20 i = 1, n
-         if (nbd(i) .ne. 2) boxed = .false.
+         if (nbd(i) .ne. 2) boxed = 0
          if (nbd(i) .eq. 0) then
 c                                this variable is always free
             iwhere(i) = -1
 
 c           otherwise set x(i)=mid(x(i), u(i), l(i)).
          else
-            cnstnd = .true.
+            cnstnd = 1
             if (nbd(i) .eq. 2 .and. u(i) - l(i) .le. zero) then
 c                   this variable is always fixed
                iwhere(i) = 3
@@ -1189,11 +1174,11 @@ c                   this variable is always fixed
   20  continue
 
       if (iprint .ge. 0) then
-         if (prjctd) then
+         if (prjctd .eq. 1) then
          call intpr('initial X infeasible. Restart with projection.',
      +  -1, 0, 0)
          endif
-         if (.not. cnstnd) then
+         if (cnstnd .eq. 0) then
           call intpr('This problem is unconstrained.', -1, 0,0)
          endif
       endif
@@ -1846,7 +1831,7 @@ cw       write (6,2010)
          call intpr('--- exit CAUCHY---',-1, 0,0)
       endif
 cw 1010 format ('Cauchy X =  ',/,(4x,1p,6(1x,d11.4)))
- 2010 format (/,'---------------- exit CAUCHY----------------------',/)
+c$$$ 2010 format (/,'---------------- exit CAUCHY----------------------',/)
 cw 3010 format (/,'---------------- CAUCHY entered-------------------')
 cw 4010 format ('Piece    ',i3,' --f1, f2 at start point ',1p,2(1x,d11.4))
 cw 4011 format (/,'Piece    ',i3,' --f1, f2 at start point ',
@@ -1863,7 +1848,7 @@ c====================== The end of cauchy ==============================
       subroutine cmprlb(n, m, x, g, ws, wy, sy, wt, z, r, wa, index,
      +                 theta, col, head, nfree, cnstnd, info)
 
-      logical          cnstnd
+      integer          cnstnd
       integer          n, m, col, head, nfree, info, index(n)
       double precision theta,
      +                 x(n), g(n), z(n), r(n), wa(4*m),
@@ -1896,7 +1881,7 @@ c     ************
       integer          i,j,k,pointr
       double precision a1,a2
 
-      if (.not. cnstnd .and. col .gt. 0) then
+      if (cnstnd .eq. 0 .and. col .gt. 0) then
          do 26 i = 1, n
             r(i) = -g(i)
   26     continue
@@ -2011,7 +1996,7 @@ c======================= The end of errclb =============================
      +                 info, ind(n), indx2(n)
       double precision theta, wn(2*m, 2*m), wn1(2*m, 2*m),
      +                 ws(n, m), wy(n, m), sy(m, m)
-      logical          updatd
+      integer          updatd
 
 c     ************
 c
@@ -2148,7 +2133,7 @@ c                     [L_a+R_z   S'AA'S   ]
 c        where L_a is the strictly lower triangular part of S'AA'Y
 c              R_z is the upper triangular part of S'ZZ'Y.
 
-      if (updatd) then
+      if (updatd .eq. 1) then
          if (iupdat .gt. m) then
 c                                 shift old part of WN1.
             do 10 jy = 1, m - 1
@@ -2401,7 +2386,7 @@ c======================= The end of formt ==============================
 
       integer n, nfree, nenter, ileave, iprint, iter,
      +        index(n), indx2(n), iwhere(n)
-      logical wrk, updatd, cnstnd
+      integer wrk, updatd, cnstnd
 
 c     ************
 c
@@ -2446,7 +2431,7 @@ c     ************
 
       nenter = 0
       ileave = n + 1
-      if (iter .gt. 0 .and. cnstnd) then
+      if (iter .gt. 0 .and. cnstnd .eq. 1) then
 c                           count the entering and leaving variables.
          do 20 i = 1, nfree
             k = index(i)
@@ -2486,7 +2471,11 @@ cw     +       n+1-ileave,' variables leave; ',nenter,' variables enter'
             call intpr(' no. variables entering =',-1,nenter, 1)
          endif
       endif
-      wrk = (ileave .lt. n+1) .or. (nenter .gt. 0) .or. updatd
+      if ((ileave .lt. n+1) .or. (nenter .gt. 0) .or. updatd .eq. 1)then
+         wrk = 1
+      else
+         wrk = 0
+      endif
 
 c     Find the index set of free and active variables at the GCP.
 
@@ -2631,7 +2620,7 @@ c====================== The end of hpsolb ==============================
      +                  iback, nfgv, info, itask, boxed, cnstnd, icsave,
      +                  isave, dsave)
 
-      logical          boxed, cnstnd
+      integer          boxed, cnstnd
       integer          n, iter, ifun, iback, nfgv, info, itask, icsave,
      +                 nbd(n), isave(2)
       double precision f, fold, gd, gdold, stp, dnorm, dtd, xstep,
@@ -2679,7 +2668,7 @@ c      if (task(1:5) .eq. 'FG_LN') goto 556
 c     Determine the maximum step length.
 
       stpmx = big
-      if (cnstnd) then
+      if (cnstnd .eq. 1) then
          if (iter .eq. 0) then
             stpmx = one
          else
@@ -2706,7 +2695,7 @@ c     Determine the maximum step length.
          endif
       endif
 
-      if (iter .eq. 0 .and. .not. boxed) then
+      if (iter .eq. 0 .and. boxed .eq. 0) then
          stp = min(one/dnorm, stpmx)
       else
          stp = one
@@ -2851,383 +2840,6 @@ c                                             and the last column of SS:
 
 c======================= The end of matupd =============================
 
-      subroutine prn1lb(n, m, l, u, x, iprint, itfile, epsmch)
-
-      integer n, m, iprint, itfile
-      double precision epsmch, x(n), l(n), u(n)
-
-c     ************
-c
-c     Subroutine prn1lb
-c
-c     This subroutine prints the input data, initial point, upper and
-c       lower bounds of each variable, machine precision, as well as
-c       the headings of the output.
-c
-c
-c                           *  *  *
-c
-c     NEOS, November 1994. (Latest revision June 1996.)
-c     Optimization Technology Center.
-c     Argonne National Laboratory and Northwestern University.
-c     Written by
-c                        Ciyou Zhu
-c     in collaboration with R.H. Byrd, P. Lu-Chen and J. Nocedal.
-c
-c
-c     ************
-
-      integer i
-      integer nprt
-
-c  limit output to 1st 5 elements
-      nprt = n
-      if (nprt .gt. 5) nprt = 5
-      if (iprint .ge. 0) then
-         if (iprint .ge. 1) then
-cw         write (6,7001) epsmch
-         call dblepr1('RUNNING THE L-BFGS-B CODE with eps=',
-     +     -1, epsmch)
-cw         write (6,*) 'N = ',n,'    M = ',m
-         call intpr1(' N =',-1, n)
-         call intpr1(' M =',-1, m)
-cw            write (itfile,2001) epsmch
-cw            write (itfile,*)'N = ',n,'    M = ',m
-cw            write (itfile,9001)
-            if (iprint .gt. 100) then
-cw               write (6,1004) 'L =',(l(i),i = 1,n)
-cw               write (6,1004) 'X0 =',(x(i),i = 1,n)
-cw               write (6,1004) 'U =',(u(i),i = 1,n)
-               call dblepr('L =',-1, l, n)
-               call dblepr('X0=',-1, x, n)
-               call dblepr('U =',-1, u, n)
-            endif
-         endif
-      endif
-
-cw 1004 format (/,a4, 1p, 6(1x,d11.4),/,(4x,1p,6(1x,d11.4)))
-cw 2001 format ('RUNNING THE L-BFGS-B CODE',/,/,
-cw     + 'it    = iteration number',/,
-cw     + 'nf    = number of function evaluations',/,
-cw     + 'nseg  = number of segments explored during the Cauchy search',/,
-cw     + 'nact  = number of active bounds at the generalized Cauchy point'
-cw     + ,/,
-cw     + 'sub   = manner in which the subspace minimization terminated:'
-cw     + ,/,'        con = converged, bnd = a bound was reached',/,
-cw     + 'itls  = number of iterations performed in the line search',/,
-cw     + 'stepl = step length used',/,
-cw     + 'tstep = norm of the displacement (total step)',/,
-cw     + 'projg = norm of the projected gradient',/,
-cw     + 'f     = function value',/,/,
-cw     + '           * * *',/,/,
-cw     + 'Machine precision =',1p,d10.3)
-cw 7001 format ('RUNNING THE L-BFGS-B CODE',/,/,
-cw     + '           * * *',/,/,
-cw     + 'Machine precision =',1p,d10.3)
-cw 9001 format (/,3x,'it',3x,'nf',2x,'nseg',2x,'nact',2x,'sub',2x,'itls',
-cw     +        2x,'stepl',4x,'tstep',5x,'projg',8x,'f')
-
-      return
-
-      end
-
-c======================= The end of prn1lb =============================
-
-      subroutine prn2lb(n, x, f, g, iprint, itfile, iter, nfgv, nact,
-     +                  sbgnrm, nseg, word, iword, iback, stp, xstep)
-
-      character*3      word
-      integer          n, iprint, itfile, iter, nfgv, nact, nseg,
-     +                 iword, iback
-      double precision f, sbgnrm, stp, xstep, x(n), g(n)
-
-c     ************
-c
-c     Subroutine prn2lb
-c
-c     This subroutine prints out new information after a successful
-c       line search.
-c
-c
-c                           *  *  *
-c
-c     NEOS, November 1994. (Latest revision June 1996.)
-c     Optimization Technology Center.
-c     Argonne National Laboratory and Northwestern University.
-c     Written by
-c                        Ciyou Zhu
-c     in collaboration with R.H. Byrd, P. Lu-Chen and J. Nocedal.
-c
-c
-c     ************
-
-      integer i,imod
-
-c           'word' records the status of subspace solutions.
-      if (iword .eq. 0) then
-c                            the subspace minimization converged.
-         word = 'con'
-      else if (iword .eq. 1) then
-c                          the subspace minimization stopped at a bound.
-         word = 'bnd'
-      else if (iword .eq. 5) then
-c                             the truncated Newton step has been used.
-         word = 'TNT'
-      else
-         word = '---'
-      endif
-      if (iprint .ge. 99) then
-cw         write (6,*) 'LINE SEARCH',iback,' times; norm of step = ',xstep
-         call intpr1('LINE SEARCH iback=',-1, iback)
-         call dblepr1('norm of step =',-1, xstep)
-cw         write (6,2001) iter,f,sbgnrm
-         call intpr1('At iterate ',-1, iter)
-         call dblepr1('f =',-1, f)
-         call dblepr1('|proj g| =',-1, sbgnrm)
-         if (iprint .gt. 100) then
-cw            write (6,1004) 'X =',(x(i), i = 1, n)
-cw            write (6,1004) 'G =',(g(i), i = 1, n)
-         endif
-      else if (iprint .gt. 0) then
-         imod = mod(iter,iprint)
-cw         if (imod .eq. 0) write (6,2001) iter,f,sbgnrm
-      endif
-cw      if (iprint .ge. 1) write (itfile,3001)
-cw     +          iter,nfgv,nseg,nact,word,iback,stp,xstep,sbgnrm,f
-
-cw 1004 format (/,a4, 1p, 6(1x,d11.4),/,(4x,1p,6(1x,d11.4)))
-cw 2001 format
-cw     +  (/,'At iterate',i5,4x,'f= ',1p,d12.5,4x,'|proj g|= ',1p,d12.5)
-cw 3001 format(2(1x,i4),2(1x,i5),2x,a3,1x,i4,1p,2(2x,d7.1),1p,2(1x,d10.3))
-
-      return
-
-      end
-
-c======================= The end of prn2lb =============================
-
-      subroutine prn3lb(n, x, f, itask, iprint, info, itfile,
-     +                  iter, nfgv, nintol, nskip, nact, sbgnrm,
-     +                  time, nseg, word, iback, stp, xstep, k,
-     +                  cachyt, sbtime, lnscht)
-
-c      character*255     task
-      character*3      word
-      integer          n, iprint, info, itfile, iter, nfgv, nintol,
-     +                 nskip, nact, nseg, iback, k, itask
-      double precision f, sbgnrm, time, stp, xstep, cachyt, sbtime,
-     +                 lnscht, x(n)
-
-c     ************
-c
-c     Subroutine prn3lb
-c
-c     This subroutine prints out information when either a built-in
-c       convergence test is satisfied or when an error message is
-c       generated.
-c
-c
-c                           *  *  *
-c
-c     NEOS, November 1994. (Latest revision June 1996.)
-c     Optimization Technology Center.
-c     Argonne National Laboratory and Northwestern University.
-c     Written by
-c                        Ciyou Zhu
-c     in collaboration with R.H. Byrd, P. Lu-Chen and J. Nocedal.
-c
-c
-c     ************
-
-      integer i
-      integer nprt
-
-c      if (task(1:5) .eq. 'ERROR') goto 999
-      if ((itask .ge. 9) .and. (itask .le. 19)) goto 999
-
-      if (iprint .ge. 0) then
-cw       write (6,3003)
-cw 3003 format (/,
-cw     + '           * * *',/,/,
-cw     + 'Tit   = total number of iterations',/,
-cw     + 'Tnf   = total number of function evaluations',/,
-cw     + 'Tnint = total number of segments explored during',
-cw     +           ' Cauchy searches',/,
-cw     + 'Skip  = number of BFGS updates skipped',/,
-cw     + 'Nact  = number of active bounds at final generalized',
-cw     +          ' Cauchy point',/,
-cw     + 'Projg = norm of the final projected gradient',/,
-cw     + 'F     = final function value',/,/,
-cw     + '           * * *')
-cw       write (6,3004)
-cw 3004 format (/,3x,'N',4x,'Tit',5x,'Tnf',2x,'Tnint',2x,
-cw     +       'Skip',2x,'Nact',5x,'Projg',8x,'F')
-cw       write(6,3005) n,iter,nfgv,nintol,nskip,nact,sbgnrm,f
-cw 3005 format (i5,2(1x,i6),(1x,i6),(2x,i4),(1x,i5),1p,2(2x,d10.3))
-         if (iprint .ge. 100) then
-            nprt = n
-            if (nprt .gt. 5) nprt = 5
-            call dblepr('X=', -1, x, nprt)
-cw            write (6,1004) 'X =',(x(i),i = 1,n)
-cw 1004 format (/,a4, 1p, 6(1x,d11.4),/,(4x,1p,6(1x,d11.4)))
-         endif
-cw       if (iprint .ge. 1) write (6,*) ' F =',f
-         if (iprint .ge. 1) call dblepr1(' F =',-1,f)
-      endif
- 999  continue
-      if (iprint .ge. 0) then
-cw         write (6,3009) itask
-         if (info .ne. 0) then
-cw            if (info .eq. -1) write (6,9011)
-           if (info .eq. -1) then
-             call intpr(
-     +' Matrix in 1st Cholesky factorization in formk is not Pos. Def.',
-     +  -1, 0, 0)
-           endif
-cw            if (info .eq. -2) write (6,9012)
-            if (info .eq. -2) then
-              call intpr(
-     +' Matrix in 2nd Cholesky factorization in formk is not Pos. Def.',
-     +  -1, 0, 0)
-
-            endif
-cw            if (info .eq. -3) write (6,9013)
-            if (info .eq. -3) then
-              call intpr(
-     +  ' Matrix in Cholesky factorization in formt is not Pos. Def.',
-     +  -1, 0, 0)
-            endif
-cw            if (info .eq. -4) write (6,9014)
-            if (info .eq. -4) then
-              call intpr(
-     +' Derivative >= 0, backtracking line search impossible.',
-     +  -1, 0, 0)
-              call intpr(
-     +'   Previous x, f and g restored.',
-     +  -1, 0, 0)
-              call intpr(
-     +' Possible causes: 1 error in function or gradient evaluation;',
-     +  -1, 0, 0)
-              call intpr(
-     +'                  2 rounding errors dominate computation.',
-     +  -1, 0, 0)
-            endif
-cw            if (info .eq. -5) write (6,9015)
-            if (info .eq. -5) then
-              call intpr(
-     +' Warning:  more than 10 function and gradient',
-     +  -1, 0, 0)
-              call intpr(
-     +'   evaluations in the last line search.  Termination',
-     +  -1, 0, 0)
-              call intpr(
-     +'   may possibly be caused by a bad search direction.',
-     +  -1, 0, 0)
-            endif
-cw            if (info .eq. -6) write (6,*)' Input nbd(',k,') is invalid.'
-            if (info .eq. -6) then
-              call intpr(
-     + ' Input nbd(k) is invalid for k = ',
-     +  -1, k, 1)
-            endif
-cw            if (info .eq. -7)
-            if (info .eq. -7) then
-              call intpr(
-     +  ' l(k) > u(k).  No feasible solution for k=', -1, k, 1)
-            endif
-cw     +      write (6,*)' l(',k,') > u(',k,').  No feasible solution.'
-cw            if (info .eq. -8) write (6,9018)
-            if (info .eq. -8) then
-              call intpr(' The triangular system is singular.',
-     +  -1, 0, 0)
-            endif
-cw            if (info .eq. -9) write (6,9019)
-            if (info .eq. -9) then
-              call intpr(
-     +' Line search cannot locate an adequate point after 20 function',
-     +  -1, 0, 0)
-              call intpr(
-     +'  and gradient evaluations.  Previous x, f and g restored.',
-     +  -1, 0, 0)
-              call intpr(
-     +' Possible causes: 1 error in function or gradient evaluation;',
-     +  -1, 0, 0)
-              call intpr(
-     +'                  2 rounding error dominate computation.',
-     +  -1, 0, 0)
-            endif
-         endif
-cw         if (iprint .ge. 1)
-cw        write (6,3007) cachyt,sbtime,lnscht
-cw   suppressing time output
-
-cw         write (6,3008) time
-cw Note -- suppress time computations here -- use R stuff
-cw         if (iprint .ge. 1) then
-cw            if (info .eq. -4 .or. info .eq. -9) then
-cw               write (itfile,3002)
-cw     +             iter,nfgv,nseg,nact,word,iback,stp,xstep
-cw            endif
-cw            write (itfile,3009) itask
-cw            if (info .ne. 0) then
-cw               if (info .eq. -1) write (itfile,9011)
-cw               if (info .eq. -2) write (itfile,9012)
-cw               if (info .eq. -3) write (itfile,9013)
-cw               if (info .eq. -4) write (itfile,9014)
-cw               if (info .eq. -5) write (itfile,9015)
-cw               if (info .eq. -8) write (itfile,9018)
-cw               if (info .eq. -9) write (itfile,9019)
-cw            endif
-cw            write (itfile,3008) time
-cw         endif
-      endif
-
-cw 1004 format (/,a4, 1p, 6(1x,d11.4),/,(4x,1p,6(1x,d11.4)))
-cw 3002 format(2(1x,i4),2(1x,i5),2x,a3,1x,i4,1p,2(2x,d7.1),6x,'-',10x,'-')
-cw 3003 format (/,
-cw     + '           * * *',/,/,
-cw     + 'Tit   = total number of iterations',/,
-cw     + 'Tnf   = total number of function evaluations',/,
-cw     + 'Tnint = total number of segments explored during',
-cw     +           ' Cauchy searches',/,
-cw     + 'Skip  = number of BFGS updates skipped',/,
-cw     + 'Nact  = number of active bounds at final generalized',
-cw     +          ' Cauchy point',/,
-cw     + 'Projg = norm of the final projected gradient',/,
-cw     + 'F     = final function value',/,/,
-cw     + '           * * *')
-cw 3007 format (/,' Cauchy                time',1p,e10.3,' seconds.',/
-cw     +        ' Subspace minimization time',1p,e10.3,' seconds.',/
-cw     +        ' Line search           time',1p,e10.3,' seconds.')
-cw 3008 format (/,' Total User time',1p,e10.3,' seconds.',/)
-cw 3009 format (/,i4)
-cw 9011 format (/,
-cw     +' Matrix in 1st Cholesky factorization in formk is not Pos. Def.')
-cw 9012 format (/,
-cw     +' Matrix in 2st Cholesky factorization in formk is not Pos. Def.')
-cw 9013 format (/,
-cw     +' Matrix in the Cholesky factorization in formt is not Pos. Def.')
-cw 9014 format (/,
-cw     +' Derivative >= 0, backtracking line search impossible.',/,
-cw     +'   Previous x, f and g restored.',/,
-cw     +' Possible causes: 1 error in function or gradient evaluation;',/,
-cw     +'                  2 rounding errors dominate computation.')
-cw 9015 format (/,
-cw     +' Warning:  more than 10 function and gradient',/,
-cw     +'   evaluations in the last line search.  Termination',/,
-cw     +'   may possibly be caused by a bad search direction.')
-cw 9018 format (/,' The triangular system is singular.')
-cw 9019 format (/,
-cw     +' Line search cannot locate an adequate point after 20 function',/
-cw     +,'  and gradient evaluations.  Previous x, f and g restored.',/,
-cw     +' Possible causes: 1 error in function or gradient evaluation;',/,
-cw     +'                  2 rounding error dominate computation.')
-
-      return
-
-      end
-
-c======================= The end of prn3lb =============================
 
       subroutine projgr(n, l, u, nbd, x, g, sbgnrm)
 
