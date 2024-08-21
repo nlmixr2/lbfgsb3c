@@ -1,27 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://nlmixr2.github.io/lbfgsb3c/404.html</loc>
-  </url>
-  <url>
-    <loc>https://nlmixr2.github.io/lbfgsb3c/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://nlmixr2.github.io/lbfgsb3c/articles/lbfgsb3c.html</loc>
-  </url>
-  <url>
-    <loc>https://nlmixr2.github.io/lbfgsb3c/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://nlmixr2.github.io/lbfgsb3c/index.html</loc>
-  </url>
-  <url>
-    <loc>https://nlmixr2.github.io/lbfgsb3c/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://nlmixr2.github.io/lbfgsb3c/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://nlmixr2.github.io/lbfgsb3c/reference/lbfgsb3c.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://nlmixr2.github.io/lbfgsb3c/404.html</loc></url>
+<url><loc>https://nlmixr2.github.io/lbfgsb3c/articles/index.html</loc></url>
+<url><loc>https://nlmixr2.github.io/lbfgsb3c/articles/lbfgsb3c.html</loc></url>
+<url><loc>https://nlmixr2.github.io/lbfgsb3c/authors.html</loc></url>
+<url><loc>https://nlmixr2.github.io/lbfgsb3c/index.html</loc></url>
+<url><loc>https://nlmixr2.github.io/lbfgsb3c/news/index.html</loc></url>
+<url><loc>https://nlmixr2.github.io/lbfgsb3c/reference/dot-lbfgsb3cPtr.html</loc></url>
+<url><loc>https://nlmixr2.github.io/lbfgsb3c/reference/index.html</loc></url>
+<url><loc>https://nlmixr2.github.io/lbfgsb3c/reference/lbfgsb3c.html</loc></url>
 </urlset>
+
