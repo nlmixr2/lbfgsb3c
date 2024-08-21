@@ -3,6 +3,18 @@
 ##' @useDynLib lbfgsb3c, .registration=TRUE
 "lbfgsb3c"
 
+#'Get the lbfgsb3c pointer
+#'
+#'
+#' @return lbfgsb3c function pointer
+#' @export
+#' @author Matthew L. Fidler
+#' @examples
+#'
+#' .lbfgsb3cPtr()
+.lbfgsb3cPtr <- function() {
+  .Call(`_lbfgsb3c_ptr`, PACKAGE = "lbfgsb3c")
+}
 
 ##' Interfacing wrapper for the Nocedal - Morales LBFGSB3 (Fortran) limited memory BFGS solver.
 ##'
