@@ -1,1 +1,4 @@
-This is a bug fix that removes irrelevant fortran code and fixes lto issues (as requested by CRAN)
+# This is a new release
+
+- The purpose of this release is to remove the binary linkage to
+  `nlmixr2est` (making the two packages more maintainable).
