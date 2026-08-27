@@ -1,0 +1,29 @@
+# libfgsb3c interface from C
+
+This is the fork of the libfgsb3 from cran with the following
+differences: - The return type has changed is is very similar to what
+`optim` returns - Allows a direct C/C++ interface through a R registered
+function, similar to C interface to `optim` with 2 additional
+arguments. - Allows adjustment of tolerances for minimization success. -
+Added `xtolAtol` and `xtolRtol` minimization success criterion. - Added
+`maxit` termination
+
+# Package index
+
+## All functions
+
+- [`.lbfgsb3cPtr()`](https://nlmixr2.github.io/lbfgsb3c/reference/dot-lbfgsb3cPtr.md)
+  : Get the lbfgsb3c pointer
+- [`lbfgsb3c()`](https://nlmixr2.github.io/lbfgsb3c/reference/lbfgsb3c.md)
+  [`lbfgsb3()`](https://nlmixr2.github.io/lbfgsb3c/reference/lbfgsb3c.md)
+  [`lbfgsb3f()`](https://nlmixr2.github.io/lbfgsb3c/reference/lbfgsb3c.md)
+  [`lbfgsb3x()`](https://nlmixr2.github.io/lbfgsb3c/reference/lbfgsb3c.md)
+  : Interfacing wrapper for the Nocedal - Morales LBFGSB3 (Fortran)
+  limited memory BFGS solver.
+
+# Articles
+
+### All vignettes
+
+- [lbfgsb3c: Using the 2011 version of
+  L-BFGS-B.](https://nlmixr2.github.io/lbfgsb3c/articles/lbfgsb3c.md):
