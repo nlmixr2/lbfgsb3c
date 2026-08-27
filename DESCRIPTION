@@ -39,8 +39,8 @@ LinkingTo: Rcpp (>= 0.12.3), RcppArmadillo
 Encoding: UTF-8
 VignetteBuilder: knitr
 NeedsCompilation: yes
-RoxygenNote: 7.3.2
 Packaged: 2020-02-26 20:18:51 UTC; john
 URL: https://nlmixr2.github.io/lbfgsb3c/, https://github.com/nlmixr2/lbfgsb3c
 BugReports: https://github.com/nlmixr2/lbfgsb3c/issues
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.0
