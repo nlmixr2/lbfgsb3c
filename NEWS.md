@@ -2,6 +2,27 @@
 
 * Added function pointer interface (instead of only low level abi interface)
 
+* Added a thread-safe C++ port of the L-BFGS-B 3.0 Fortran code (the
+  Fortran is kept and remains the default).  It keeps no static or
+  global state and does not call the R API, so independent problems can
+  be solved concurrently (for example as an inner optimizer in an OpenMP
+  loop).  The port reproduces the Fortran results exactly.  Its
+  workspace is allocated once per thread and reused (zeroed per run), so
+  memory scales with the number of threads, not the number of
+  optimizations.
+
+* The C++ port is available from C/C++ as `lbfgsb3Cts` (the second
+  element of `.lbfgsb3cPtr()`, set up by `iniLbfgsb3` in
+  `lbfgsb3ptr.h`) and from R with `lbfgsb3c(..., control =
+  list(engine = "cpp"))`.
+
+* `lbfgsb3C_` no longer stores its `$info` result in a global R list.
+
+* `lmm` is now validated.  `lbfgsb3c()` errors unless it is a whole
+  number >= 1; the C entry points return `fail = 29` ("ERROR: INVALID
+  LMM") instead of dividing by zero (`lmm <= 0`) or overflowing the
+  workspace size (very large `lmm`).
+
 # lbfgsb3c 2024-3.4 changes
 
 * LTO fixes and remove unused code for Fortran fixes

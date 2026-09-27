@@ -52,10 +52,11 @@
 ##' \item{pgtol} helps control the convergence of the "L-BFGS-B" method. It is a tolerance on the projected gradient in the current search direction. This defaults to zero, when the check is suppressed.
 ##' \item{abstol} helps control the convergence of the "L-BFGS-B" method. It is an absolute tolerance difference in x values. This defaults to zero, when the check is suppressed.
 ##' \item{reltol} helps control the convergence of the "L-BFGS-B" method. It is an relative tolerance difference in x values. This defaults to zero, when the check is suppressed.
-##' \item{lmm} is an integer giving the number of BFGS updates retained in the "L-BFGS-B" method, It defaults to 5.
+##' \item{lmm} is an integer giving the number of BFGS updates retained in the "L-BFGS-B" method, It defaults to 5.  It must be a whole number of at least 1.
 ##' \item{maxit} maximum number of iterations.
 ##' \item{iprint} Provided only for compatibility with older codes. This control is no longer active.)
 ##' \item{info} a boolean to indicate if more optimization information is captured and output in a $info list
+##' \item{engine} which implementation of L-BFGS-B to use: \code{"fortran"} (the default) is the original Fortran code; \code{"cpp"} is a thread-safe C++ port of the same code (also available to C/C++ callers as \code{lbfgsb3Cts} through \code{.lbfgsb3cPtr()} and \code{lbfgsb3ptr.h}).
 ##' }
 ##'
 ##' @return
@@ -156,7 +157,8 @@ lbfgsb3c <- function(par, fn, gr=NULL, lower = -Inf, upper = Inf,
                pgtol=0,
                reltol=1e-6,
                abstol=0,
-               info=FALSE);
+               info=FALSE,
+               engine="fortran");
   callstak <- sys.calls() # get the call stack
   lcs <- length(callstak)
   fstr <- as.character(callstak[lcs])
@@ -168,6 +170,12 @@ lbfgsb3c <- function(par, fn, gr=NULL, lower = -Inf, upper = Inf,
   if (!all(namc %in% names(ctrl)))
     stop("unknown names in control: ", namc[!(namc %in% names(ctrl))])
   ctrl[namc] <- control
+  if (!is.numeric(ctrl$lmm) || length(ctrl$lmm) != 1L || !is.finite(ctrl$lmm) ||
+        ctrl$lmm != trunc(ctrl$lmm) || ctrl$lmm < 1) {
+    stop("'lmm' must be a single whole number >= 1", call. = FALSE)
+  }
+  .engines <- c("fortran", "cpp")
+  ctrl$engine <- match(match.arg(ctrl$engine, .engines), .engines) - 1L
   if (missing(rho) || is.null(rho)) {
     rho <- as.environment(list(...));
   }

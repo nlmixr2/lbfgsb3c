@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
 #include <time.h>
 #include <Rmath.h>
 #include <Rcpp.h>
 #include <R_ext/Linpack.h>
+#include "lbfgsb_cpp.h"
 #define max2( a , b )  ( (a) > (b) ? (a) : (b) )
 
 using namespace Rcpp;
@@ -13,19 +15,26 @@ extern "C" void setulb_(int *n, int *m, double *x, double *l, double *u,
                         double *wa, int *iwa, int *itask, int *iprint,
                         int *icsave, int *lsave, int *isave, double *dsave);
 
-typedef double optimfn(int n, double *par, void *ex);
-
-typedef void optimgr(int n, double *par, double *gr, void *ex);
-
-List lbfgsb3Cinfo;
-
-extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
+// Fortran driver; the final solver state goes to `info` (may be NULL)
+static void lbfgsb3C_fortran(int n, int lmm, double *x, double *lower,
                           double *upper, int *nbd, double *Fmin, optimfn fn,
                           optimgr gr, int *fail, void *ex, double factr,
                           double pgtol, int *fncount, int *grcount,
                           int maxit, char *msg, int trace, int iprint,
-                          double atol, double rtol, double *g) {
+                          double atol, double rtol, double *g,
+                          lbfgsb3c_cpp::InfoOut *info) {
   // Optim compatible interface
+  fncount[0]=0;
+  grcount[0]=0;
+  if (!lbfgsb3c_cpp::validLmm(n, lmm)) {
+    // the Fortran divides by zero for lmm <= 0
+    if (info != NULL) {
+      std::memset(info, 0, sizeof(*info));
+      info->itask = lbfgsb3c_cpp::kInvalidLmm;
+    }
+    fail[0] = lbfgsb3c_cpp::kInvalidLmm;
+    return;
+  }
   int itask= 2;
   // *Fmin=;
   double *lastx = new double[n];
@@ -44,35 +53,6 @@ extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
   fncount[0]=0;
   grcount[0]=0;
   int itask2=0;
-  CharacterVector taskList(28);
-  taskList[0]="NEW_X";
-  taskList[1]="START";
-  taskList[2]="STOP";
-  taskList[3]="FG";//,  // 1-4
-  taskList[4]="ABNORMAL_TERMINATION_IN_LNSRCH";
-  taskList[5]="CONVERGENCE"; //5-6
-  taskList[6]="CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL";//7
-  taskList[7]="CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH";//8
-  taskList[8]="ERROR: FTOL .LT. ZERO"; //9
-  taskList[9]="ERROR: GTOL .LT. ZERO";//10
-  taskList[10]="ERROR: INITIAL G .GE. ZERO"; //11
-  taskList[11]="ERROR: INVALID NBD"; // 12
-  taskList[12]="ERROR: N .LE. 0"; // 13
-  taskList[13]="ERROR: NO FEASIBLE SOLUTION"; // 14
-  taskList[14]="ERROR: STP .GT. STPMAX"; // 15
-  taskList[15]="ERROR: STP .LT. STPMIN"; // 16
-  taskList[16]="ERROR: STPMAX .LT. STPMIN"; // 17
-  taskList[17]="ERROR: STPMIN .LT. ZERO"; // 18
-  taskList[18]="ERROR: XTOL .LT. ZERO"; // 19
-  taskList[19]="FG_LNSRCH"; // 20
-  taskList[20]="FG_START"; // 21
-  taskList[21]="RESTART_FROM_LNSRCH"; // 22
-  taskList[22]="WARNING: ROUNDING ERRORS PREVENT PROGRESS"; // 23
-  taskList[23]="WARNING: STP .eq. STPMAX"; // 24
-  taskList[24]="WARNING: STP .eq. STPMIN"; // 25
-  taskList[25]="WARNING: XTOL TEST SATISFIED"; //
-  taskList[26] = "CONVERGENCE: Parameters differences below xtol";
-  taskList[27] = "Maximum number of iterations reached";
   while (true){
     if (trace >= 2){
       Rprintf("itask: %d\n", itask);
@@ -85,7 +65,7 @@ extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
       // fncount[0]++;
       // gr(n, x, g, ex);
       // grcount[0]++;
-      Rprintf("\n================================================================================\nBefore call task number %d, or \"%s\"\n", itask, (as<std::string>(taskList[itask-1])).c_str());
+      Rprintf("\n================================================================================\nBefore call task number %d, or \"%s\"\n", itask, lbfgsb3c_cpp::taskName(itask));
     }
     if (itask==3) doExit=1;
     setulb_(&n, &lmm, x, lower, upper, nbd, Fmin, g, &factr, &pgtol,
@@ -93,7 +73,7 @@ extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
 
     if (trace > 2) {
       Rprintf("returned from lbfgsb3 \n");
-      Rprintf("returned itask is %d or \"%s\"\n",itask,(as<std::string>(taskList[itask-1])).c_str());
+      Rprintf("returned itask is %d or \"%s\"\n",itask,lbfgsb3c_cpp::taskName(itask));
     }
     switch (itask){
     case 4:
@@ -162,26 +142,48 @@ extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
   if (itask2){
     itask=itask2;
   }
-  LogicalVector lsaveR(4);
-  NumericVector dsaveR(29);
-  IntegerVector isaveR(44);
-  std::copy(&lsave[0],&lsave[0]+4, &lsaveR[0]);
-  std::copy(&dsave[0],&dsave[0]+29, dsaveR.begin());
-  std::copy(&isave[0],&isave[0]+44, isaveR.begin());;
-  CharacterVector taskR(1);
-  taskR[0] = taskList[itask-1];
-  lbfgsb3Cinfo = List::create(_["task"] = taskR,
-                              _["itask"]= IntegerVector::create(itask),
-                              _["lsave"]= lsaveR,
-                              _["icsave"]= IntegerVector::create(icsave),
-                              _["dsave"]= dsaveR,
-                              _["isave"] = isaveR);
-  // info <- list(task = task, itask = itask, lsave = lsave,
-  //      icsave = icsave, dsave = dsave, isave = isave)
+  if (info != NULL) {
+    info->itask = itask;
+    info->icsave = icsave;
+    std::copy(&lsave[0], &lsave[0]+4, info->lsave);
+    std::copy(&isave[0], &isave[0]+44, info->isave);
+    std::copy(&dsave[0], &dsave[0]+29, info->dsave);
+  }
   fail[0]= itask;
   delete[] wa;
   delete[] iwa;
   delete[] lastx;
+}
+
+extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
+                          double *upper, int *nbd, double *Fmin, optimfn fn,
+                          optimgr gr, int *fail, void *ex, double factr,
+                          double pgtol, int *fncount, int *grcount,
+                          int maxit, char *msg, int trace, int iprint,
+                          double atol, double rtol, double *g) {
+  lbfgsb3C_fortran(n, lmm, x, lower, upper, nbd, Fmin, fn, gr, fail, ex,
+                   factr, pgtol, fncount, grcount, maxit, msg, trace, iprint,
+                   atol, rtol, g, NULL);
+}
+
+static void rPrinter(void *data, const char *s) {
+  (void)data;
+  Rprintf("%s", s);
+}
+
+static List infoList(const lbfgsb3c_cpp::InfoOut &info) {
+  LogicalVector lsaveR(4);
+  NumericVector dsaveR(29);
+  IntegerVector isaveR(44);
+  std::copy(&info.lsave[0], &info.lsave[0]+4, lsaveR.begin());
+  std::copy(&info.dsave[0], &info.dsave[0]+29, dsaveR.begin());
+  std::copy(&info.isave[0], &info.isave[0]+44, isaveR.begin());
+  return List::create(_["task"] = CharacterVector::create(lbfgsb3c_cpp::taskName(info.itask)),
+                      _["itask"]= IntegerVector::create(info.itask),
+                      _["lsave"]= lsaveR,
+                      _["icsave"]= IntegerVector::create(info.icsave),
+                      _["dsave"]= dsaveR,
+                      _["isave"] = isaveR);
 }
 
 Environment grho;
@@ -238,12 +240,21 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   if (lmmN.size() != 1) stop("lmm has to have one element in it.");
   int lmm = lmmN[0];//lmmN.size();
   int n = par.size();
+  if (lmmN[0] == NA_INTEGER || !lbfgsb3c_cpp::validLmm(n, lmm))
+    stop("lmm must be a whole number >= 1 small enough for the workspace to fit in memory (got %d).", lmm);
   IntegerVector maxitN = as<IntegerVector>(ctrl["maxit"]);
   if (maxitN.size() != 1) stop("maxit has to have one element in it.");
   int maxit = maxitN[0];
   IntegerVector iprintN = as<IntegerVector>(ctrl["iprint"]);
   if (iprintN.size() != 1) stop("iprint has to have one element in it.");
   int iprint = iprintN[0];
+  // 0 = Fortran (default), 1 = thread-safe C++ port
+  int engine = 0;
+  if (ctrl.containsElementNamed("engine")) {
+    IntegerVector engineN = as<IntegerVector>(ctrl["engine"]);
+    if (engineN.size() != 1) stop("engine has to have one element in it.");
+    engine = engineN[0];
+  }
   // double *g = new double[par.size()];
   double *low = new double[par.size()];
   if (lower.size() == 1){
@@ -284,9 +295,19 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   grho=rho;
   void *ex =NULL;
   char msg[120];
-  lbfgsb3C_(n, lmm, x, low, up, nbd, &fmin, gfn, ggr,
-            &fail, ex, factr, pgtol, &fncount,
-            &grcount, maxit, msg, trace, iprint , atol, rtol, &g[0]);
+  lbfgsb3c_cpp::InfoOut info = {};
+  if (engine == 1) {
+    lbfgsb3c_cpp::Printer pr = {rPrinter, NULL};
+    lbfgsb3c_cpp::lbfgsb3Cts_core(n, lmm, x, low, up, nbd, &fmin, gfn, ggr,
+                                  &fail, ex, factr, pgtol, &fncount,
+                                  &grcount, maxit, trace, iprint, atol, rtol,
+                                  &g[0], &pr, &info);
+  } else {
+    lbfgsb3C_fortran(n, lmm, x, low, up, nbd, &fmin, gfn, ggr,
+                     &fail, ex, factr, pgtol, &fncount,
+                     &grcount, maxit, msg, trace, iprint , atol, rtol, &g[0],
+                     &info);
+  }
   NumericVector parf(par.size());
   std::copy(&x[0],&x[0]+par.size(),parf.begin());
   parf.attr("names")=ev["pn"];
@@ -323,43 +344,14 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   case 17:
   case 18:
   case 19:
+  case 29:
     ret["convergence"] = IntegerVector::create(52);
     break;
   default:
     ret["convergence"] = IntegerVector::create(NA_INTEGER);
   }
-  CharacterVector taskList(28);
-  taskList[0]="NEW_X";
-  taskList[1]="START";
-  taskList[2]="STOP";
-  taskList[3]="FG";//,  // 1-4
-  taskList[4]="ABNORMAL_TERMINATION_IN_LNSRCH";
-  taskList[5]="CONVERGENCE"; //5-6
-  taskList[6]="CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL";//7
-  taskList[7]="CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH";//8
-  taskList[8]="ERROR: FTOL .LT. ZERO"; //9
-  taskList[9]="ERROR: GTOL .LT. ZERO";//10
-  taskList[10]="ERROR: INITIAL G .GE. ZERO"; //11
-  taskList[11]="ERROR: INVALID NBD"; // 12
-  taskList[12]="ERROR: N .LE. 0"; // 13
-  taskList[13]="ERROR: NO FEASIBLE SOLUTION"; // 14
-  taskList[14]="ERROR: STP .GT. STPMAX"; // 15
-  taskList[15]="ERROR: STP .LT. STPMIN"; // 16
-  taskList[16]="ERROR: STPMAX .LT. STPMIN"; // 17
-  taskList[17]="ERROR: STPMIN .LT. ZERO"; // 18
-  taskList[18]="ERROR: XTOL .LT. ZERO"; // 19
-  taskList[19]="FG_LNSRCH"; // 20
-  taskList[20]="FG_START"; // 21
-  taskList[21]="RESTART_FROM_LNSRCH"; // 22
-  taskList[22]="WARNING: ROUNDING ERRORS PREVENT PROGRESS"; // 23
-  taskList[23]="WARNING: STP .eq. STPMAX"; // 24
-  taskList[24]="WARNING: STP .eq. STPMIN"; // 25
-  taskList[25]="WARNING: XTOL TEST SATISFIED"; //
-  taskList[26] = "CONVERGENCE: Parameters differences below xtol";
-  taskList[27] = "Maximum number of iterations reached";
-
-  ret["message"]= CharacterVector::create(taskList[fail-1]);
-  if (addInfo) ret["info"] = lbfgsb3Cinfo;
+  ret["message"]= CharacterVector::create(lbfgsb3c_cpp::taskName(fail));
+  if (addInfo) ret["info"] = infoList(info);
   delete [] x;
   delete [] low;
   delete [] up;

@@ -5,3 +5,11 @@ lbfgsb3cpp <- function(par, fn, gr, lower, upper, ctrl, rho) {
     .Call(`_lbfgsb3c_lbfgsb3cpp`, par, fn, gr, lower, upper, ctrl, rho)
 }
 
+.lbfgsb3cThreadTest <- function(nprob, nthreads) {
+    .Call(`_lbfgsb3c_lbfgsb3cThreadTest_`, nprob, nthreads)
+}
+
+.lbfgsb3cLmmTest <- function(lmm) {
+    .Call(`_lbfgsb3c_lbfgsb3cLmmTest_`, lmm)
+}
+
