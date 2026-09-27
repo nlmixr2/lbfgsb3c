@@ -1705,6 +1705,9 @@ const char *taskName(int itask) {
 
 bool validLmm(int n, int lmm) {
   if (lmm < 1) return false;
+  // 11*lmm^2 alone must fit in an int; this bound also keeps the 64-bit
+  // arithmetic below from overflowing for any int n
+  if (lmm > 13972) return false;
   long long ln = n < 0 ? 0 : n, lm = lmm;
   long long nwa = 2 * lm * ln + 11 * lm * lm + 5 * ln + 8 * lm;
   return nwa <= (long long)INT_MAX;
@@ -1808,6 +1811,16 @@ void lbfgsb3Cts_core(int n, int lmm, double *x, double *lower,
                      const Printer *pr, InfoOut *info) {
   fncount[0] = 0;
   grcount[0] = 0;
+  if (n <= 0) {
+    // errclb's check, done before the workspace is sized from n
+    say(pr, "  ERROR: N .LE. 0\n");
+    if (info != nullptr) {
+      std::memset(info, 0, sizeof(*info));
+      info->itask = 13;
+    }
+    fail[0] = 13;
+    return;
+  }
   if (!validLmm(n, lmm)) {
     // lmm <= 0 would divide by zero in matupd; a huge lmm overflows the
     // workspace size.  Fail before allocating or evaluating anything.

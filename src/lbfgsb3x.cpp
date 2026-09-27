@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstring>
+#include <vector>
 #include <time.h>
 #include <Rmath.h>
 #include <Rcpp.h>
@@ -26,6 +27,15 @@ static void lbfgsb3C_fortran(int n, int lmm, double *x, double *lower,
   // Optim compatible interface
   fncount[0]=0;
   grcount[0]=0;
+  if (n <= 0) {
+    // errclb's check, done before the work arrays are sized from n
+    if (info != NULL) {
+      std::memset(info, 0, sizeof(*info));
+      info->itask = 13;
+    }
+    fail[0] = 13;
+    return;
+  }
   if (!lbfgsb3c_cpp::validLmm(n, lmm)) {
     // the Fortran divides by zero for lmm <= 0
     if (info != NULL) {
@@ -37,12 +47,15 @@ static void lbfgsb3C_fortran(int n, int lmm, double *x, double *lower,
   }
   int itask= 2;
   // *Fmin=;
-  double *lastx = new double[n];
-  std::copy(&x[0],&x[0]+n,&lastx[0]);
+  // vectors so an R error in fn/gr does not leak the work arrays
+  std::vector<double> lastxV(&x[0], &x[0]+n);
+  double *lastx = lastxV.data();
   int nwa = 2*lmm*n + 11*lmm*lmm + 5*n + 8*lmm;
-  double *wa= new double[nwa];
+  std::vector<double> waV(nwa);
+  double *wa = waV.data();
   int niwa = 3*n;
-  int *iwa= new int[niwa];
+  std::vector<int> iwaV(niwa);
+  int *iwa = iwaV.data();
   int icsave = 0;
   int lsave[4] = {0};
   int isave[44] = {0};
@@ -150,9 +163,6 @@ static void lbfgsb3C_fortran(int n, int lmm, double *x, double *lower,
     std::copy(&dsave[0], &dsave[0]+29, info->dsave);
   }
   fail[0]= itask;
-  delete[] wa;
-  delete[] iwa;
-  delete[] lastx;
 }
 
 extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
@@ -186,36 +196,38 @@ static List infoList(const lbfgsb3c_cpp::InfoOut &info) {
                       _["isave"] = isaveR);
 }
 
-Environment grho;
-
-CharacterVector gnames;
-
-List ev;
+// R callbacks for one lbfgsb3cpp() call, passed to the solver through
+// `ex` so that nested optimizations do not share them
+struct RCallbacks {
+  Function fn;
+  Function gr;
+  RObject pn;
+  Environment rho;
+};
 
 double gfn(int n, double *x, void *ex){
+  RCallbacks *cb = static_cast<RCallbacks*>(ex);
   Rcpp::NumericVector par(n);
   std::copy(&x[0], &x[0]+n, &par[0]);
-  Function fn = as<Function>(ev["fn"]);
-  par.attr("names") = ev["pn"];
-  double ret = as<double>(fn(par, grho));
+  par.attr("names") = cb->pn;
+  double ret = as<double>(cb->fn(par, cb->rho));
   return ret;
 }
 
 void ggr(int n, double *x, double *gr, void *ex){
+  RCallbacks *cb = static_cast<RCallbacks*>(ex);
   Rcpp::NumericVector par(n), ret(n);
   std::copy(&x[0], &x[0]+n, &par[0]);
-  Function grad = as<Function>(ev["gr"]);
-  par.attr("names") = ev["pn"];
-  ret = grad(par, grho);
+  par.attr("names") = cb->pn;
+  ret = cb->gr(par, cb->rho);
+  if (ret.size() != n) stop("gradient must have %d elements (got %d).", n, (int)ret.size());
   std::copy(&ret[0], &ret[0]+n, &gr[0]);
 }
 
 //[[Rcpp::export]]
 Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector lower, NumericVector upper, List ctrl, Environment rho){
   Rcpp::List ret;
-  ev["fn"] = fn;
-  ev["gr"] = gr;
-  ev["pn"] = par.attr("names");
+  RCallbacks cb = {fn, gr, par.attr("names"), rho};
   Rcpp::NumericVector g(par.size());
   // CONV in 6, 7, 8; ERROR in 9-19; WARN in 23-26
   IntegerVector traceI = as<IntegerVector>(ctrl["trace"]);
@@ -255,29 +267,30 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
     if (engineN.size() != 1) stop("engine has to have one element in it.");
     engine = engineN[0];
   }
-  // double *g = new double[par.size()];
-  double *low = new double[par.size()];
+  // vectors so an R error (bad bounds, or in fn/gr) does not leak them
+  std::vector<double> lowV(par.size());
+  double *low = lowV.data();
   if (lower.size() == 1){
     std::fill_n(&low[0],par.size(),lower[0]);
   } else if (lower.size() == par.size()){
     std::copy(lower.begin(),lower.end(),&low[0]);
   } else {
-    delete [] low;
     stop("Lower bound must match the size of par or only have one element.");
   }
-  double *up = new double[par.size()];
+  std::vector<double> upV(par.size());
+  double *up = upV.data();
   if (upper.size() == 1){
     std::fill_n(&up[0],par.size(),upper[0]);
   } else if (upper.size() == par.size()){
     std::copy(upper.begin(),upper.end(),&up[0]);
   } else {
-    delete [] low;
-    delete [] up;
     stop("Upper bound must match the size of par or only have one element.");
   }
-  double *x = new double[par.size()];
+  std::vector<double> xV(par.size());
+  double *x = xV.data();
   std::copy(par.begin(),par.end(),&x[0]);
-  int *nbd = new int[par.size()];
+  std::vector<int> nbdV(par.size());
+  int *nbd = nbdV.data();
   int i;
   for (i = par.size();i--;){
     /*
@@ -292,8 +305,7 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   }
   double fmin=std::numeric_limits<double>::max();
   int fail = 0, fncount=0, grcount=0;
-  grho=rho;
-  void *ex =NULL;
+  void *ex = &cb;
   char msg[120];
   lbfgsb3c_cpp::InfoOut info = {};
   if (engine == 1) {
@@ -310,8 +322,8 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   }
   NumericVector parf(par.size());
   std::copy(&x[0],&x[0]+par.size(),parf.begin());
-  parf.attr("names")=ev["pn"];
-  g.attr("names")=ev["pn"];
+  parf.attr("names")=cb.pn;
+  g.attr("names")=cb.pn;
   ret["par"]=parf;
   ret["grad"]=g;
   ret["value"] = fmin;
@@ -352,9 +364,5 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   }
   ret["message"]= CharacterVector::create(lbfgsb3c_cpp::taskName(fail));
   if (addInfo) ret["info"] = infoList(info);
-  delete [] x;
-  delete [] low;
-  delete [] up;
-  delete [] nbd;
   return ret;
 }

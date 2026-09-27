@@ -147,20 +147,26 @@ test_that(".lbfgsb3cPtr exposes the thread-safe pointer", {
   expect_true(all(vapply(.p, typeof, character(1)) == "externalptr"))
 })
 
-test_that("nested cpp optimizations on one thread do not share workspace", {
-  # inner problem solved inside the outer objective, reusing the thread's
-  # workspace while the outer run holds it
-  .inner <- function(s) {
-    lbfgsb3c(rep(3, 8), function(x) .rosen.f(x) * s,
+test_that("nested optimizations do not share workspace or R callbacks", {
+  # The inner problem is solved inside the outer objective, while the
+  # outer run holds this thread's workspace and R callbacks.  The inner
+  # minimum of s * rosen is s (at x = 1), so the outer objective is
+  # (x1 - 1)^2 + (x2 - 1)^2 + 1 + x1^2, minimized at (0.5, 1).
+  .inner <- function(s, engine) {
+    lbfgsb3c(rep(3, 4), function(x) .rosen.f(x) * s,
              function(x) .rosen.g(x) * s,
-             control = list(engine = "cpp"))$value
+             control = list(engine = engine, factr = 10))$value
   }
-  .of <- function(x) sum((x - 1)^2) + .inner(1 + x[1]^2)
-  .og <- function(x) numDeriv::grad(.of, x)
-  .nested <- lbfgsb3c(c(2, 2), .of, .og, control = list(engine = "cpp"))
-  .flat <- lbfgsb3c(c(2, 2), .of, .og, control = list(engine = "fortran"))
-  expect_equal(.nested$par, .flat$par, tolerance = 1e-12)
-  expect_identical(.nested$counts, .flat$counts)
+  for (.engine in c("fortran", "cpp")) {
+    .of <- function(x) sum((x - 1)^2) + .inner(1 + x[1]^2, .engine)
+    .og <- function(x) c(2 * (x[1] - 1) + 2 * x[1], 2 * (x[2] - 1))
+    .r <- lbfgsb3c(c(a = 2, b = 2), .of, .og,
+                   control = list(engine = .engine))
+    expect_equal(unname(.r$par), c(0.5, 1), tolerance = 1e-4,
+                 info = .engine)
+    expect_identical(names(.r$par), c("a", "b"))
+    expect_identical(.r$convergence, 0L)
+  }
 })
 
 test_that("nonsensical lmm values error", {
@@ -182,9 +188,20 @@ test_that("nonsensical lmm values error", {
   }
 })
 
-test_that("C entry points return fail = 29 for invalid lmm", {
-  .r <- lbfgsb3c:::.lbfgsb3cLmmTest(c(0L, -3L, 20000L, 5L))
-  expect_identical(.r$fail[1:3], rep(29L, 3))
-  expect_identical(.r$fncount[1:3], rep(0L, 3))
-  expect_true(.r$fail[4] %in% c(6L, 7L, 8L, 27L))
+test_that("C entry points reject invalid lmm and n without evaluating", {
+  # lmm = 1e9 would overflow even 64-bit workspace-size arithmetic
+  .r <- lbfgsb3c:::.lbfgsb3cLmmTest(c(0L, -3L, 20000L, 1000000000L, 5L, 5L, 5L),
+                                    c(3L, 3L, 3L, 3L, 0L, -1L, 3L))
+  expect_identical(.r$fail[1:6], c(rep(29L, 4), 13L, 13L))
+  expect_identical(.r$fncount[1:6], rep(0L, 6))
+  expect_true(.r$fail[7] %in% c(6L, 7L, 8L, 27L))
+})
+
+test_that("a gradient of the wrong length is an error", {
+  for (.engine in c("fortran", "cpp")) {
+    expect_error(lbfgsb3c(c(1, 2, 3), function(x) sum(x^2),
+                          function(x) 2 * x[1:2],
+                          control = list(engine = .engine)),
+                 "gradient must have 3 elements")
+  }
 })

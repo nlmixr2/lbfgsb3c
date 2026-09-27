@@ -21,7 +21,7 @@ void lbfgsb3Cts_(int n, int lmm, double *x, double *lower,
 SEXP _lbfgsb3c_lbfgsb3cpp(SEXP, SEXP, SEXP, SEXP, SEXP,
 			  SEXP, SEXP);
 SEXP _lbfgsb3c_lbfgsb3cThreadTest_(SEXP, SEXP);
-SEXP _lbfgsb3c_lbfgsb3cLmmTest_(SEXP);
+SEXP _lbfgsb3c_lbfgsb3cLmmTest_(SEXP, SEXP);
 
 SEXP _lbfgsb3c_ptr(void) {
   int pro = 0;  // Counter for the number of PROTECT calls
@@ -60,7 +60,7 @@ void R_init_lbfgsb3c(DllInfo *info){
     {"_lbfgsb3c_lbfgsb3cpp", (DL_FUNC) &_lbfgsb3c_lbfgsb3cpp, 7},
     {"_lbfgsb3c_ptr", (DL_FUNC) &_lbfgsb3c_ptr, 0},
     {"_lbfgsb3c_lbfgsb3cThreadTest_", (DL_FUNC) &_lbfgsb3c_lbfgsb3cThreadTest_, 2},
-    {"_lbfgsb3c_lbfgsb3cLmmTest_", (DL_FUNC) &_lbfgsb3c_lbfgsb3cLmmTest_, 1},
+    {"_lbfgsb3c_lbfgsb3cLmmTest_", (DL_FUNC) &_lbfgsb3c_lbfgsb3cLmmTest_, 2},
     {NULL, NULL, 0}
   };
   // C callable to assign environments.

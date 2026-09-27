@@ -89,17 +89,20 @@ List lbfgsb3cThreadTest_(int nprob, int nthreads) {
                       _["openmp"] = openmp);
 }
 
-// Test helper: call lbfgsb3Cts_ directly with the given lmm values
+// Test helper: call lbfgsb3Cts_ directly with the given (n, lmm) pairs;
+// n is at most 3
 //[[Rcpp::export(name=".lbfgsb3cLmmTest", rng=false)]]
-List lbfgsb3cLmmTest_(IntegerVector lmm) {
+List lbfgsb3cLmmTest_(IntegerVector lmm, IntegerVector n) {
   int k = lmm.size();
+  if (n.size() != k) stop("n and lmm must have the same length");
   IntegerVector fail(k), fncount(k);
   for (int j = 0; j < k; ++j) {
     RosenProb prob = {100.0};
     double x[3] = {-1.2, 1.0, -1.2}, l[3] = {0, 0, 0}, u[3] = {0, 0, 0},
            g[3] = {0, 0, 0}, f = 0.0;
     int nbd[3] = {0, 0, 0}, fl = 0, fc = -1, gc = -1;
-    lbfgsb3Cts_(3, lmm[j], x, l, u, nbd, &f, rosenFn, rosenGr, &fl, &prob,
+    if (n[j] > 3) stop("n must be at most 3");
+    lbfgsb3Cts_(n[j], lmm[j], x, l, u, nbd, &f, rosenFn, rosenGr, &fl, &prob,
                 1e7, 0.0, &fc, &gc, 1000, NULL, 0, -1, 0.0, 1e-8, g);
     fail[j] = fl;
     fncount[j] = fc;

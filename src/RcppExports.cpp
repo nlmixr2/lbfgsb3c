@@ -41,12 +41,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // lbfgsb3cLmmTest_
-List lbfgsb3cLmmTest_(IntegerVector lmm);
-RcppExport SEXP _lbfgsb3c_lbfgsb3cLmmTest_(SEXP lmmSEXP) {
+List lbfgsb3cLmmTest_(IntegerVector lmm, IntegerVector n);
+RcppExport SEXP _lbfgsb3c_lbfgsb3cLmmTest_(SEXP lmmSEXP, SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< IntegerVector >::type lmm(lmmSEXP);
-    rcpp_result_gen = Rcpp::wrap(lbfgsb3cLmmTest_(lmm));
+    Rcpp::traits::input_parameter< IntegerVector >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(lbfgsb3cLmmTest_(lmm, n));
     return rcpp_result_gen;
 END_RCPP
 }

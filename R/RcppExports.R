@@ -9,7 +9,7 @@ lbfgsb3cpp <- function(par, fn, gr, lower, upper, ctrl, rho) {
     .Call(`_lbfgsb3c_lbfgsb3cThreadTest_`, nprob, nthreads)
 }
 
-.lbfgsb3cLmmTest <- function(lmm) {
-    .Call(`_lbfgsb3c_lbfgsb3cLmmTest_`, lmm)
+.lbfgsb3cLmmTest <- function(lmm, n) {
+    .Call(`_lbfgsb3c_lbfgsb3cLmmTest_`, lmm, n)
 }
 

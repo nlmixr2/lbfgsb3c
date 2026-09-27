@@ -21,7 +21,13 @@
 * `lmm` is now validated.  `lbfgsb3c()` errors unless it is a whole
   number >= 1; the C entry points return `fail = 29` ("ERROR: INVALID
   LMM") instead of dividing by zero (`lmm <= 0`) or overflowing the
-  workspace size (very large `lmm`).
+  workspace size (very large `lmm`).  `n <= 0` returns `fail = 13`
+  before any work arrays are allocated.
+
+* Nested `lbfgsb3c()` calls (an objective that runs its own
+  optimization) now work: the R callbacks are kept per call instead of
+  in globals that the inner call overwrote.  A gradient of the wrong
+  length is now an error instead of a read past its end.
 
 # lbfgsb3c 2024-3.4 changes
 
