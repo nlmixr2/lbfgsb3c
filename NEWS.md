@@ -1,10 +1,8 @@
-# Version: 2024-3.5 changes
-
-* Added function pointer interface (instead of only low level abi interface)
+# lbfgsb3c 2024-3.6 changes
 
 * Added a thread-safe C++ port of the L-BFGS-B 3.0 Fortran code (the
-  Fortran is kept and remains the default).  It keeps no static or
-  global state and does not call the R API, so independent problems can
+  Fortran is kept and remains the default).  It keeps no shared
+  mutable state and does not call the R API, so independent problems can
   be solved concurrently (for example as an inner optimizer in an OpenMP
   loop).  The port reproduces the Fortran results exactly.  Its
   workspace is allocated once per thread and reused (zeroed per run), so
@@ -28,6 +26,13 @@
   optimization) now work: the R callbacks are kept per call instead of
   in globals that the inner call overwrote.  A gradient of the wrong
   length is now an error instead of a read past its end.
+
+* Added `src/Makevars` (OpenMP for the internal thread-safety test
+  helper, and explicit `$(FLIBS)`).
+
+# Version: 2024-3.5 changes
+
+* Added function pointer interface (instead of only low level abi interface)
 
 # lbfgsb3c 2024-3.4 changes
 
