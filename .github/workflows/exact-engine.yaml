@@ -1,0 +1,45 @@
+# Check that the C++ engine reproduces the Fortran engine bit for bit.
+# This needs R's reference BLAS: the Fortran path calls R's LINPACK, which
+# calls the system BLAS, and optimized BLAS libraries round differently.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+name: exact-engine
+
+jobs:
+  exact-engine:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      LBFGSB3C_EXACT_ENGINE_TEST: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Use the reference BLAS
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libblas3 liblapack3
+          sudo update-alternatives --set libblas.so.3-x86_64-linux-gnu \
+            /usr/lib/x86_64-linux-gnu/blas/libblas.so.3
+          sudo update-alternatives --set liblapack.so.3-x86_64-linux-gnu \
+            /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::testthat, local::.
+          needs: check
+
+      - name: Run tests with exact engine comparison
+        run: |
+          si <- sessionInfo()
+          cat("BLAS:", si$BLAS, "\nLAPACK:", si$LAPACK, "\n")
+          testthat::test_local(".", reporter = "summary", stop_on_failure = TRUE)
+        shell: Rscript {0}

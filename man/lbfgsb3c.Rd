@@ -109,6 +109,7 @@ The control list can contain:
 \item{maxit} maximum number of iterations.
 \item{iprint} Provided only for compatibility with older codes. This control is no longer active.)
 \item{info} a boolean to indicate if more optimization information is captured and output in a $info list
+\item{engine} which implementation of L-BFGS-B to use: \code{"fortran"} (the default) is the original Fortran code; \code{"cpp"} is a thread-safe C++ port of the same code (also available to C/C++ callers as \code{lbfgsb3Cts} through \code{.lbfgsb3cPtr()} and \code{lbfgsb3ptr.h}).
 }
 }
 \note{
