@@ -391,6 +391,38 @@ struct Cauchy {
     }
   }
 
+  // Scan the variables and set xcp = x.  False when there are no
+  // breakpoints and no free variables (xcp = x is the answer).
+  bool start() {
+    nfree = n + 1;
+    if (iprint >= 99) say(pr, "--- CAUCHY entered---\n");
+    for (int i = 1; i <= col2; ++i) p(i) = 0.0;
+    scan();
+    if (theta != 1.0) dscal(col, theta, &p(col + 1));
+    dcopy(n, &x(1), &xcp(1));
+    if (nbreak == 0 && nfree == n + 1) {
+      printXcp();
+      return false;
+    }
+    return true;
+  }
+
+  // First and second derivative of the piecewise quadratic at t = 0 and
+  // its stationary point dtm.  False on a bmv failure.
+  bool initSlopes(int &info) {
+    for (int j = 0; j < col2; ++j) c_[j] = 0.0;
+    f2 = -theta * f1;
+    f2_org = f2;
+    if (col > 0) {
+      bmv(m, sy_, wt_, col, p_, v_, info);
+      if (info != 0) return false;
+      f2 = f2 - ddot(col2, v_, p_);
+    }
+    dtm = -f1 / f2;
+    tsum = 0.0;
+    return true;
+  }
+
   void printXcp() const {
     if (iprint > 100) sayVec(pr, "Cauchy X[1:5] = ", &xcp(1), n > 5 ? 5 : n);
   }
@@ -528,28 +560,8 @@ void cauchy(int n, double *x_, const double *l_, const double *u_,
   Cauchy cp(n, x_, l_, u_, nbd_, g_, iorder_, iwhere_, t_, d_, xcp_, m, wy_,
             ws_, sy_, wt_, theta, col, head, p_, c_, wbp_, v_, iprint,
             epsmch, pr);
-  cp.nfree = n + 1;
-  if (iprint >= 99) say(pr, "--- CAUCHY entered---\n");
-
-  for (int i = 1; i <= cp.col2; ++i) p_[i - 1] = 0.0;
-  cp.scan();
-  if (theta != 1.0) dscal(col, theta, &p_[col]);
-  dcopy(n, x_, xcp_);
-  if (cp.nbreak == 0 && cp.nfree == n + 1) {
-    cp.printXcp();
-    return;
-  }
-
-  for (int j = 1; j <= cp.col2; ++j) c_[j - 1] = 0.0;
-  cp.f2 = -theta * cp.f1;
-  cp.f2_org = cp.f2;
-  if (col > 0) {
-    bmv(m, sy_, wt_, col, p_, v_, info);
-    if (info != 0) return;
-    cp.f2 = cp.f2 - ddot(cp.col2, v_, p_);
-  }
-  cp.dtm = -cp.f1 / cp.f2;
-  cp.tsum = 0.0;
+  if (!cp.start()) return;
+  if (!cp.initSlopes(info)) return;
   nseg = 1;
   if (iprint >= 99) say(pr, "no. of breakpoints = %d\n", cp.nbreak);
 
@@ -2047,6 +2059,32 @@ int newXStop(int maxit, int fncount, const double *lastx, const double *x,
 
 } // namespace
 
+namespace {
+
+// Evaluate f and g at x for an FG request from setulb
+void evalFG(int n, double *x, double *Fmin, double *g, optimfn fn,
+            optimgr gr, void *ex, int *fncount, int *grcount, int trace,
+            int iter, const Printer *pr) {
+  if (trace >= 2) sayVec(pr, "computing f and g at prm=\n", x, n);
+  Fmin[0] = fn(n, x, ex);
+  fncount[0]++;
+  gr(n, x, g, ex);
+  grcount[0]++;
+  if (trace > 0) traceEval(pr, trace, iter, *Fmin, g, n);
+}
+
+void fillInfo(InfoOut *info, int itask, int icsave, const int *lsave,
+              const int *isave, const double *dsave) {
+  if (info == nullptr) return;
+  info->itask = itask;
+  info->icsave = icsave;
+  std::memcpy(info->lsave, lsave, sizeof(info->lsave));
+  std::memcpy(info->isave, isave, sizeof(info->isave));
+  std::memcpy(info->dsave, dsave, sizeof(info->dsave));
+}
+
+} // namespace
+
 // The lbfgsb3C_ driver loop for either implementation of setulb, with
 // output routed to `pr` and the final state to `info`.
 void lbfgsbDriver(SetulbStep step, int n, int lmm, double *x, double *lower,
@@ -2079,13 +2117,9 @@ void lbfgsbDriver(SetulbStep step, int n, int lmm, double *x, double *lower,
       say(pr, "returned itask is %d or \"%s\"\n", itask, taskName(itask));
     }
     if (itask == 4 || itask == 20 || itask == 21) {
-      // FG, FG_LNSRCH, FG_START: evaluate f and g at x
-      if (trace >= 2) sayVec(pr, "computing f and g at prm=\n", x, n);
-      Fmin[0] = fn(n, x, ex);
-      fncount[0]++;
-      gr(n, x, g, ex);
-      grcount[0]++;
-      if (trace > 0) traceEval(pr, trace, isave[33], *Fmin, g, n);
+      // FG, FG_LNSRCH, FG_START
+      evalFG(n, x, Fmin, g, fn, gr, ex, fncount, grcount, trace, isave[33],
+             pr);
     } else if (itask == 1) {
       // NEW_X
       itask2 = newXStop(maxit, fncount[0], lastx.data(), x, n, rtol, atol,
@@ -2100,13 +2134,7 @@ void lbfgsbDriver(SetulbStep step, int n, int lmm, double *x, double *lower,
     }
   }
   if (itask2) itask = itask2;
-  if (info != nullptr) {
-    info->itask = itask;
-    info->icsave = icsave;
-    std::memcpy(info->lsave, lsave, sizeof(lsave));
-    std::memcpy(info->isave, isave, sizeof(isave));
-    std::memcpy(info->dsave, dsave, sizeof(dsave));
-  }
+  fillInfo(info, itask, icsave, lsave, isave, dsave);
   fail[0] = itask;
 }
 
