@@ -1,4 +1,4 @@
-# lbfgsb3c 2024-3.6 changes
+# lbfgsb3c 2026-3.5 changes
 
 * Added a thread-safe C++ port of the L-BFGS-B 3.0 Fortran code (the
   Fortran is kept and remains the default).  It keeps no shared
