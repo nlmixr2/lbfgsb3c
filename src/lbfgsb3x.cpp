@@ -7,7 +7,6 @@
 #include <Rcpp.h>
 #include <R_ext/Linpack.h>
 #include "lbfgsb_cpp.h"
-#define max2( a , b )  ( (a) > (b) ? (a) : (b) )
 
 using namespace Rcpp;
 
@@ -16,153 +15,23 @@ extern "C" void setulb_(int *n, int *m, double *x, double *l, double *u,
                         double *wa, int *iwa, int *itask, int *iprint,
                         int *icsave, int *lsave, int *isave, double *dsave);
 
-// Fortran driver; the final solver state goes to `info` (may be NULL)
-static void lbfgsb3C_fortran(int n, int lmm, double *x, double *lower,
-                          double *upper, int *nbd, double *Fmin, optimfn fn,
-                          optimgr gr, int *fail, void *ex, double factr,
-                          double pgtol, int *fncount, int *grcount,
-                          int maxit, char *msg, int trace, int iprint,
-                          double atol, double rtol, double *g,
-                          lbfgsb3c_cpp::InfoOut *info) {
-  // Optim compatible interface
-  fncount[0]=0;
-  grcount[0]=0;
-  if (n <= 0) {
-    // errclb's check, done before the work arrays are sized from n
-    if (info != NULL) {
-      std::memset(info, 0, sizeof(*info));
-      info->itask = 13;
-    }
-    fail[0] = 13;
-    return;
-  }
-  if (!lbfgsb3c_cpp::validLmm(n, lmm)) {
-    // the Fortran divides by zero for lmm <= 0
-    if (info != NULL) {
-      std::memset(info, 0, sizeof(*info));
-      info->itask = lbfgsb3c_cpp::kInvalidLmm;
-    }
-    fail[0] = lbfgsb3c_cpp::kInvalidLmm;
-    return;
-  }
-  int itask= 2;
-  // *Fmin=;
-  // vectors so an R error in fn/gr does not leak the work arrays
-  std::vector<double> lastxV(&x[0], &x[0]+n);
-  double *lastx = lastxV.data();
-  int nwa = 2*lmm*n + 11*lmm*lmm + 5*n + 8*lmm;
-  std::vector<double> waV(nwa);
-  double *wa = waV.data();
-  int niwa = 3*n;
-  std::vector<int> iwaV(niwa);
-  int *iwa = iwaV.data();
-  int icsave = 0;
-  int lsave[4] = {0};
-  int isave[44] = {0};
-  int i=0;
-  double dsave[29]= {0};
-  // Initial setup
-  int doExit=0;
-  fncount[0]=0;
-  grcount[0]=0;
-  int itask2=0;
-  while (true){
-    if (trace >= 2){
-      Rprintf("itask: %d\n", itask);
-      Rprintf("computing f and g at prm=\n");
-      NumericVector xv(n);
-      std::copy(&x[0],&x[0]+n,&xv[0]);
-      print(xv);
-      // // Calculate f and g
-      // Fmin[0] = fn(n, x, ex);
-      // fncount[0]++;
-      // gr(n, x, g, ex);
-      // grcount[0]++;
-      Rprintf("\n================================================================================\nBefore call task number %d, or \"%s\"\n", itask, lbfgsb3c_cpp::taskName(itask));
-    }
-    if (itask==3) doExit=1;
-    setulb_(&n, &lmm, x, lower, upper, nbd, Fmin, g, &factr, &pgtol,
-            wa, iwa, &itask, &iprint, &icsave, lsave, isave, dsave);
+// lbfgsb_cpp's driver step for the Fortran setulb_ (which does its own
+// printing through R, so `pr` is unused)
+static void fortranStep(int n, int m, double *x, const double *l,
+                        const double *u, const int *nbd, double &f,
+                        double *g, double factr, double pgtol, double *wa,
+                        int *iwa, int &itask, int iprint, int &icsave,
+                        int *lsave, int *isave, double *dsave,
+                        const lbfgsb3c_cpp::Printer *pr) {
+  (void)pr;
+  setulb_(&n, &m, x, const_cast<double*>(l), const_cast<double*>(u),
+          const_cast<int*>(nbd), &f, g, &factr, &pgtol, wa, iwa, &itask,
+          &iprint, &icsave, lsave, isave, dsave);
+}
 
-    if (trace > 2) {
-      Rprintf("returned from lbfgsb3 \n");
-      Rprintf("returned itask is %d or \"%s\"\n",itask,lbfgsb3c_cpp::taskName(itask));
-    }
-    switch (itask){
-    case 4:
-    case 20:
-    case 21:
-      if (trace >= 2) {
-        Rprintf("computing f and g at prm=\n");
-        NumericVector xv(n);
-        std::copy(&x[0],&x[0]+n,&xv[0]);
-        print(xv);
-      }
-      // Calculate f and g
-      Fmin[0] = fn(n, x, ex);
-      fncount[0]++;
-      gr(n, x, g, ex);
-      grcount[0]++;
-      if (trace > 0) {
-        Rprintf("At iteration %d f=%f ", isave[33], *Fmin);
-        if (trace > 1) {
-          double tmp = 0;
-          for (int j = 0; j < n; j++) {
-            if (tmp < fabs(g[j])){
-              tmp = fabs(g[j]);
-            }
-          }
-          Rprintf("max(abs(g))=%f",tmp);
-        }
-        Rprintf("\n");
-      }
-      break;
-    case 1:
-      // New x;
-      if (maxit < fncount[0]){
-        itask2=28;
-        doExit=1;
-        itask=3; // Stop -- gives the right results and restores gradients
-        if (trace > 2){
-          Rprintf("Exit becuase maximum number of function calls %d met.\n", maxit);
-        }
-      } else {
-        bool converge=fabs(lastx[n-1]-x[n-1]) < fabs(x[n-1])*rtol+atol;
-        if (converge){
-          for (i=n-1;i--;){
-            converge=fabs(lastx[i]-x[i]) < fabs(x[i])*rtol+atol;
-            if  (!converge){
-              break;
-            }
-          }
-        }
-        if (converge){
-          itask2=27;
-          itask=3; // Stop -- gives the right results and restores gradients
-          if (trace > 2){
-            Rprintf("CONVERGENCE: Parameters differences below xtol.\n");
-          }
-          doExit=1;
-        }
-      }
-      std::copy(&x[0],&x[0]+n,&lastx[0]);
-      break;
-    default:
-      doExit=1;
-    }
-    if (doExit) break;
-  }
-  if (itask2){
-    itask=itask2;
-  }
-  if (info != NULL) {
-    info->itask = itask;
-    info->icsave = icsave;
-    std::copy(&lsave[0], &lsave[0]+4, info->lsave);
-    std::copy(&isave[0], &isave[0]+44, info->isave);
-    std::copy(&dsave[0], &dsave[0]+29, info->dsave);
-  }
-  fail[0]= itask;
+static void rPrinter(void *data, const char *s) {
+  (void)data;
+  Rprintf("%s", s);
 }
 
 extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
@@ -171,14 +40,12 @@ extern "C" void lbfgsb3C_(int n, int lmm, double *x, double *lower,
                           double pgtol, int *fncount, int *grcount,
                           int maxit, char *msg, int trace, int iprint,
                           double atol, double rtol, double *g) {
-  lbfgsb3C_fortran(n, lmm, x, lower, upper, nbd, Fmin, fn, gr, fail, ex,
-                   factr, pgtol, fncount, grcount, maxit, msg, trace, iprint,
-                   atol, rtol, g, NULL);
-}
-
-static void rPrinter(void *data, const char *s) {
-  (void)data;
-  Rprintf("%s", s);
+  (void)msg;
+  lbfgsb3c_cpp::Printer pr = {rPrinter, NULL};
+  lbfgsb3c_cpp::lbfgsbDriver(fortranStep, n, lmm, x, lower, upper, nbd, Fmin,
+                             fn, gr, fail, ex, factr, pgtol, fncount,
+                             grcount, maxit, trace, iprint, atol, rtol, g,
+                             &pr, NULL);
 }
 
 static List infoList(const lbfgsb3c_cpp::InfoOut &info) {
@@ -306,20 +173,12 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   double fmin=std::numeric_limits<double>::max();
   int fail = 0, fncount=0, grcount=0;
   void *ex = &cb;
-  char msg[120];
   lbfgsb3c_cpp::InfoOut info = {};
-  if (engine == 1) {
-    lbfgsb3c_cpp::Printer pr = {rPrinter, NULL};
-    lbfgsb3c_cpp::lbfgsb3Cts_core(n, lmm, x, low, up, nbd, &fmin, gfn, ggr,
-                                  &fail, ex, factr, pgtol, &fncount,
-                                  &grcount, maxit, trace, iprint, atol, rtol,
-                                  &g[0], &pr, &info);
-  } else {
-    lbfgsb3C_fortran(n, lmm, x, low, up, nbd, &fmin, gfn, ggr,
-                     &fail, ex, factr, pgtol, &fncount,
-                     &grcount, maxit, msg, trace, iprint , atol, rtol, &g[0],
-                     &info);
-  }
+  lbfgsb3c_cpp::Printer pr = {rPrinter, NULL};
+  lbfgsb3c_cpp::lbfgsbDriver(engine == 1 ? lbfgsb3c_cpp::setulb : fortranStep,
+                             n, lmm, x, low, up, nbd, &fmin, gfn, ggr, &fail,
+                             ex, factr, pgtol, &fncount, &grcount, maxit,
+                             trace, iprint, atol, rtol, &g[0], &pr, &info);
   NumericVector parf(par.size());
   std::copy(&x[0],&x[0]+par.size(),parf.begin());
   parf.attr("names")=cb.pn;

@@ -61,7 +61,26 @@ void setulb(int n, int m, double *x, const double *l, const double *u,
             int &icsave, int *lsave, int *isave, double *dsave,
             const Printer *pr);
 
-// Driver with the lbfgsb3C_ loop; `pr` (may be null) receives trace and
+// One reverse-communication call of an L-BFGS-B implementation (the C++
+// setulb above, or an adapter for the Fortran setulb_)
+typedef void (*SetulbStep)(int n, int m, double *x, const double *l,
+                           const double *u, const int *nbd, double &f,
+                           double *g, double factr, double pgtol, double *wa,
+                           int *iwa, int &itask, int iprint, int &icsave,
+                           int *lsave, int *isave, double *dsave,
+                           const Printer *pr);
+
+// The lbfgsb3C_ driver loop around `step`; `pr` (may be null) receives
+// trace output, `info` (may be null) the final solver state.  The work
+// arrays come from a per-thread workspace.
+void lbfgsbDriver(SetulbStep step, int n, int lmm, double *x, double *lower,
+                  double *upper, int *nbd, double *Fmin, optimfn fn,
+                  optimgr gr, int *fail, void *ex, double factr,
+                  double pgtol, int *fncount, int *grcount, int maxit,
+                  int trace, int iprint, double atol, double rtol,
+                  double *g, const Printer *pr, InfoOut *info);
+
+// lbfgsbDriver with the C++ setulb; `pr` (may be null) receives trace and
 // iprint output, `info` (may be null) receives the final solver state.
 void lbfgsb3Cts_core(int n, int lmm, double *x, double *lower,
                      double *upper, int *nbd, double *Fmin, optimfn fn,

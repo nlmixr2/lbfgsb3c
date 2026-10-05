@@ -83,6 +83,8 @@ List lbfgsb3cThreadTest_(int nprob, int nthreads) {
   bool openmp = false;
 #ifdef _OPENMP
   openmp = true;
+#else
+  (void)nthreads;
 #endif
   return List::create(_["parallel"] = transpose(parM),
                       _["serial"] = transpose(serM),

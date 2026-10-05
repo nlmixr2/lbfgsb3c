@@ -158,7 +158,7 @@ lbfgsb3c <- function(par, fn, gr=NULL, lower = -Inf, upper = Inf,
                reltol=1e-6,
                abstol=0,
                info=FALSE,
-               engine="fortran");
+               engine="fortran")
   callstak <- sys.calls() # get the call stack
   lcs <- length(callstak)
   fstr <- as.character(callstak[lcs])
