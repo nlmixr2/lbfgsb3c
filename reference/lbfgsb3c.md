@@ -150,6 +150,13 @@ The control list can contain:
 - info a boolean to indicate if more optimization information is
   captured and output in a \$info list
 
+- engine which implementation of L-BFGS-B to use: `"fortran"` (the
+  default) is the original Fortran code; `"cpp"` is a thread-safe C++
+  port of the same code (also available to C/C++ callers as `lbfgsb3Cts`
+  through
+  [`.lbfgsb3cPtr()`](https://nlmixr2.github.io/lbfgsb3c/reference/dot-lbfgsb3cPtr.md)
+  and `lbfgsb3ptr.h`).
+
 ## Note
 
 This package is a wrapper to the Fortran code released by Nocedal and

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lbfgsb3c</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2024-3.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2024-3.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -155,6 +155,7 @@ present the arguments in ... are ignored.  Otherwise the
 <li><p>maxit maximum number of iterations.</p></li>
 <li><p>iprint Provided only for compatibility with older codes. This control is no longer active.)</p></li>
 <li><p>info a boolean to indicate if more optimization information is captured and output in a $info list</p></li>
+<li><p>engine which implementation of L-BFGS-B to use: <code>"fortran"</code> (the default) is the original Fortran code; <code>"cpp"</code> is a thread-safe C++ port of the same code (also available to C/C++ callers as <code>lbfgsb3Cts</code> through <code><a href="dot-lbfgsb3cPtr.html">.lbfgsb3cPtr()</a></code> and <code>lbfgsb3ptr.h</code>).</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
