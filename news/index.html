@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lbfgsb3c</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2024-3.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2026-3.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,7 +34,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="2024-3.6" id="lbfgsb3c-2024-36-changes">lbfgsb3c 2024-3.6 changes<a class="anchor" aria-label="anchor" href="#lbfgsb3c-2024-36-changes"></a></h2>
+<h2 class="pkg-version" data-toc-text="2026-3.5" id="lbfgsb3c-2026-35-changes">lbfgsb3c 2026-3.5 changes<a class="anchor" aria-label="anchor" href="#lbfgsb3c-2026-35-changes"></a></h2>
 <ul><li><p>Added a thread-safe C++ port of the L-BFGS-B 3.0 Fortran code (the Fortran is kept and remains the default). It keeps no shared mutable state and does not call the R API, so independent problems can be solved concurrently (for example as an inner optimizer in an OpenMP loop). The port reproduces the Fortran results exactly. Its workspace is allocated once per thread and reused (zeroed per run), so memory scales with the number of threads, not the number of optimizations.</p></li>
 <li><p>The C++ port is available from C/C++ as <code>lbfgsb3Cts</code> (the second element of <code><a href="../reference/dot-lbfgsb3cPtr.html">.lbfgsb3cPtr()</a></code>, set up by <code>iniLbfgsb3</code> in <code>lbfgsb3ptr.h</code>) and from R with <code>lbfgsb3c(..., control = list(engine = "cpp"))</code>.</p></li>
 <li><p><code>lbfgsb3C_</code> no longer stores its <code>$info</code> result in a global R list.</p></li>
