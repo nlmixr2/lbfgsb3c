@@ -110,7 +110,7 @@ Rcpp::List lbfgsb3cpp(NumericVector par, Function fn, Function gr, NumericVector
   if (atolN.size() != 1) stop("abstol has to have one element in it.");
   double atol = atolN[0];
   NumericVector rtolN = as<NumericVector>(ctrl["reltol"]);
-  if (atolN.size() != 1) stop("reltol has to have one element in it.");
+  if (rtolN.size() != 1) stop("reltol has to have one element in it.");
   double rtol = rtolN[0];
   LogicalVector infoN = as<LogicalVector>(ctrl["info"]);
   if (infoN.size() != 1) stop("info has to have one element in it.");

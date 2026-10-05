@@ -71,6 +71,8 @@ void solveOne(int k, int n, double *out) {
 
 //[[Rcpp::export(name=".lbfgsb3cThreadTest", rng=false)]]
 List lbfgsb3cThreadTest_(int nprob, int nthreads) {
+  if (nprob < 1 || nprob == NA_INTEGER) stop("nprob must be a positive integer");
+  if (nthreads < 1 || nthreads == NA_INTEGER) stop("nthreads must be a positive integer");
   const int n = 10;
   const int ncol = n + 4;
   std::vector<double> par((size_t)nprob * ncol), ser((size_t)nprob * ncol);

@@ -169,31 +169,36 @@ void dtrsl(double *t_, int ldt, int n, double *b_, int job, int &info) {
 
 // ------------------------------------------------------------- L-BFGS-B
 
-// Project x onto [l, u] for one variable (the first loop of active).
-// Returns 1 when x is at (or was moved to) a bound.
-int activeProject(int nbd, double l, double u, double &x, int &prjctd) {
-  if (nbd <= 0) return 0;
-  if (nbd <= 2 && x <= l) {
-    if (x < l) {
+// Bounds are only read when nbd says they exist, as in the Fortran, so
+// callers may leave unused bounds unset.
+
+// Project x(i) onto its bounds (the first loop of active).  Returns 1
+// when x(i) is at (or was moved to) a bound.
+int activeProject(int i, const V1<const int> &nbd, const V1<const double> &l,
+                  const V1<const double> &u, V1<double> &x, int &prjctd) {
+  if (nbd(i) <= 0) return 0;
+  if (nbd(i) <= 2 && x(i) <= l(i)) {
+    if (x(i) < l(i)) {
       prjctd = 1;
-      x = l;
+      x(i) = l(i);
     }
     return 1;
   }
-  if (nbd >= 2 && x >= u) {
-    if (x > u) {
+  if (nbd(i) >= 2 && x(i) >= u(i)) {
+    if (x(i) > u(i)) {
       prjctd = 1;
-      x = u;
+      x(i) = u(i);
     }
     return 1;
   }
   return 0;
 }
 
-// iwhere for one variable (the second loop of active)
-int activeWhere(int nbd, double l, double u) {
-  if (nbd == 0) return -1;
-  if (nbd == 2 && u - l <= 0.0) return 3;
+// iwhere for variable i (the second loop of active)
+int activeWhere(int i, const V1<const int> &nbd, const V1<const double> &l,
+                const V1<const double> &u) {
+  if (nbd(i) == 0) return -1;
+  if (nbd(i) == 2 && u(i) - l(i) <= 0.0) return 3;
   return 0;
 }
 
@@ -210,11 +215,11 @@ void active(int n, const double *l_, const double *u_, const int *nbd_,
   cnstnd = 0;
   boxed = 1;
   for (int i = 1; i <= n; ++i)
-    nbdd = nbdd + activeProject(nbd(i), l(i), u(i), x(i), prjctd);
+    nbdd = nbdd + activeProject(i, nbd, l, u, x, prjctd);
   for (int i = 1; i <= n; ++i) {
     if (nbd(i) != 2) boxed = 0;
     if (nbd(i) != 0) cnstnd = 1;
-    iwhere(i) = activeWhere(nbd(i), l(i), u(i));
+    iwhere(i) = activeWhere(i, nbd, l, u);
   }
   if (iprint >= 0) {
     if (prjctd == 1) say(pr, "initial X infeasible. Restart with projection.\n");
@@ -1376,41 +1381,43 @@ void subsmDirection(int n, int m, int nsub, const V1<int> &ind,
 
 // x(k) + dk projected onto its bounds; sets iword = 1 when it lands on
 // a bound
-double subsmProject(int nbd, double l, double u, double xk, double dk,
-                    double xcur, int &iword) {
-  if (nbd == 0) return xk + dk;
-  if (nbd == 1) {
-    double xn = dmax(l, xk + dk);
-    if (xn == l) iword = 1;
+double subsmProject(int k, const V1<const int> &nbd,
+                    const V1<const double> &l, const V1<const double> &u,
+                    double xk, double dk, int &iword) {
+  if (nbd(k) == 0) return xk + dk;
+  if (nbd(k) == 1) {
+    double xn = dmax(l(k), xk + dk);
+    if (xn == l(k)) iword = 1;
     return xn;
   }
-  if (nbd == 2) {
-    xk = dmax(l, xk + dk);
-    double xn = dmin(u, xk);
-    if (xn == l || xn == u) iword = 1;
+  if (nbd(k) == 2) {
+    xk = dmax(l(k), xk + dk);
+    double xn = dmin(u(k), xk);
+    if (xn == l(k) || xn == u(k)) iword = 1;
     return xn;
   }
-  if (nbd == 3) {
-    double xn = dmin(u, xk + dk);
-    if (xn == u) iword = 1;
+  if (nbd(k) == 3) {
+    double xn = dmin(u(k), xk + dk);
+    if (xn == u(k)) iword = 1;
     return xn;
   }
-  return xcur;
+  return xk;
 }
 
-// Step-length limit for one variable in the backtracking step; temp1
+// Step-length limit for variable k in the backtracking step; temp1
 // carries over between variables as in the Fortran loop
-void subsmLimit(int nbd, double l, double u, double xk, double dk,
+void subsmLimit(int k, const V1<const int> &nbd, const V1<const double> &l,
+                const V1<const double> &u, double xk, double dk,
                 double alpha, double &temp1) {
-  if (dk < 0.0 && nbd <= 2) {
-    double temp2 = l - xk;
+  if (dk < 0.0 && nbd(k) <= 2) {
+    double temp2 = l(k) - xk;
     if (temp2 >= 0.0) {
       temp1 = 0.0;
     } else if (dk * alpha < temp2) {
       temp1 = temp2 / dk;
     }
-  } else if (dk > 0.0 && nbd >= 2) {
-    double temp2 = u - xk;
+  } else if (dk > 0.0 && nbd(k) >= 2) {
+    double temp2 = u(k) - xk;
     if (temp2 <= 0.0) {
       temp1 = 0.0;
     } else if (dk * alpha > temp2) {
@@ -1428,7 +1435,7 @@ void subsmBacktrack(int nsub, const V1<int> &ind, const V1<const double> &l,
   for (int i = 1; i <= nsub; ++i) {
     int k = ind(i);
     if (nbd(k) == 0) continue;
-    subsmLimit(nbd(k), l(k), u(k), x(k), d(i), alpha, temp1);
+    subsmLimit(k, nbd, l, u, x(k), d(i), alpha, temp1);
     if (temp1 < alpha) {
       alpha = temp1;
       ibd = i;
@@ -1475,7 +1482,7 @@ void subsm(int n, int m, int nsub, int *ind_, const double *l_,
   dcopy(n, x_, xp_);
   for (int i = 1; i <= nsub; ++i) {
     int k = ind(i);
-    x(k) = subsmProject(nbd(k), l(k), u(k), x(k), d(i), x(k), iword);
+    x(k) = subsmProject(k, nbd, l, u, x(k), d(i), iword);
   }
 
   if (iword != 0) {

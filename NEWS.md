@@ -30,6 +30,9 @@
 * Added `src/Makevars` (OpenMP for the internal thread-safety test
   helper, and explicit `$(FLIBS)`).
 
+* `control$reltol` is now checked for length one (the check tested
+  `abstol` instead, so an empty `reltol` was read out of bounds).
+
 # Version: 2024-3.5 changes
 
 * Added function pointer interface (instead of only low level abi interface)
