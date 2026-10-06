@@ -18,7 +18,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/nlmixr2/lbfgsb3c/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/nlmixr2/lbfgsb3c/blob/v2026-3.5/DESCRIPTION)
 
 Fidler ML, Nash JC, Zhu C, Byrd R, Nocedal J, Morales JL (2026).
 *lbfgsb3c: Limited Memory BFGS Minimizer with Bounds on Parameters with

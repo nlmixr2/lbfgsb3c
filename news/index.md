@@ -2,6 +2,8 @@
 
 ## lbfgsb3c 2026-3.5 changes
 
+CRAN release: 2026-10-06
+
 - Added a thread-safe C++ port of the L-BFGS-B 3.0 Fortran code (the
   Fortran is kept and remains the default). It keeps no shared mutable
   state and does not call the R API, so independent problems can be

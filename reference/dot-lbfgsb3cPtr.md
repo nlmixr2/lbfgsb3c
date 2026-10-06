@@ -22,9 +22,9 @@ Matthew L. Fidler
 
 .lbfgsb3cPtr()
 #> $lbfgsb3C
-#> <pointer: 0x7f237e61fff0>
+#> <pointer: 0x7f331a79fff0>
 #> 
 #> $lbfgsb3Cts
-#> <pointer: 0x7f237e6309f0>
+#> <pointer: 0x7f331a7b09f0>
 #> 
 ```
