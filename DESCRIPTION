@@ -30,7 +30,6 @@ Suggests:
     knitr,
     microbenchmark,
     optimx,
-    pkgbuild,
     RcppArmadillo,
     rmarkdown,
     testthat (>= 3.0.0),

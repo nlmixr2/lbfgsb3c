@@ -15,8 +15,6 @@ vignette: >
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-## Added 20190717 to get vignette to build
-pkgbuild::compile_dll()
 ```
 
 # Abstract
