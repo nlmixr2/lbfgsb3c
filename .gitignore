@@ -7,3 +7,5 @@ Meta
 .Rhistory
 docs
 inst/doc
+revdep/
+.vexp/
