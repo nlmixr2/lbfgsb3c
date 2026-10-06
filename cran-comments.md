@@ -14,10 +14,10 @@
 
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 0 notes on R-hub.
 
-(Locally there is one NOTE about `-mno-omit-leaf-frame-pointer`, which
-comes from the system R build flags, not the package.)
+Locally there is 1 NOTE about `-mno-omit-leaf-frame-pointer`, which comes
+from the system R build flags, not the package.
 
 ## Reverse dependencies
 
