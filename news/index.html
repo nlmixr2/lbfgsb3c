@@ -41,6 +41,7 @@
 <li><p><code>lmm</code> is now validated. <code><a href="../reference/lbfgsb3c.html">lbfgsb3c()</a></code> errors unless it is a whole number &gt;= 1; the C entry points return <code>fail = 29</code> (“ERROR: INVALID LMM”) instead of dividing by zero (<code>lmm &lt;= 0</code>) or overflowing the workspace size (very large <code>lmm</code>). <code>n &lt;= 0</code> returns <code>fail = 13</code> before any work arrays are allocated.</p></li>
 <li><p>Nested <code><a href="../reference/lbfgsb3c.html">lbfgsb3c()</a></code> calls (an objective that runs its own optimization) now work: the R callbacks are kept per call instead of in globals that the inner call overwrote. A gradient of the wrong length is now an error instead of a read past its end.</p></li>
 <li><p>Added <code>src/Makevars</code> (OpenMP for the internal thread-safety test helper, and explicit <code>$(FLIBS)</code>).</p></li>
+<li><p>Removed the unused <code>timer.f</code> (its <code>cpu_time</code> call left an unresolved symbol with flang 21+), and the vignette no longer calls <code><a href="https://pkgbuild.r-lib.org/reference/compile_dll.html" class="external-link">pkgbuild::compile_dll()</a></code> (it failed when checked outside the source tree).</p></li>
 <li><p><code>control$reltol</code> is now checked for length one (the check tested <code>abstol</code> instead, so an empty <code>reltol</code> was read out of bounds).</p></li>
 </ul></div>
     <div class="section level2">

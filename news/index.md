@@ -35,6 +35,11 @@
 - Added `src/Makevars` (OpenMP for the internal thread-safety test
   helper, and explicit `$(FLIBS)`).
 
+- Removed the unused `timer.f` (its `cpu_time` call left an unresolved
+  symbol with flang 21+), and the vignette no longer calls
+  [`pkgbuild::compile_dll()`](https://pkgbuild.r-lib.org/reference/compile_dll.html)
+  (it failed when checked outside the source tree).
+
 - `control$reltol` is now checked for length one (the check tested
   `abstol` instead, so an empty `reltol` was read out of bounds).
 
